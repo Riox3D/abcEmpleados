@@ -27,19 +27,16 @@ export const proxyToSql = async (req, res) => {
 
 export const proxyToSqlAuth = async (req, res) => {
   try {
-    // 1. Usamos claveEmpleado para que coincida con tu BD
-    const userId = req.user?.id || '999999';
-    const claveEmpleado = req.user?.claveEmpleado || '000000'; // Cambiado de numEmp a claveEmpleado[cite: 2]
+    const userId = req.user?.id || 'Admin';
+    const claveEmpleado = req.user?.claveEmpleado || 'ADM001'; 
 
-    console.log('Probando con Usuario:', userId, 'Clave Empleado:', claveEmpleado);
-
-    // 2. Quitamos /api y armamos la ruta final[cite: 2]
-    const endpoint = `${req.originalUrl.replace('/api', '')}/${userId}/${claveEmpleado}`; 
+    // 1. LA RUTA QUEDA LIMPIA: Solo le quitamos el /api, sin pegar nada al final
+    const endpoint = req.originalUrl.replace('/api', ''); 
     
     const method = req.method.toLowerCase();
     const data = {
       body: req.body,
-      query: req.query,
+      query: { ...req.query, rol: userId, identificador: claveEmpleado }
     };
 
     const result = await querySqlService(endpoint, method, data);
@@ -49,7 +46,6 @@ export const proxyToSqlAuth = async (req, res) => {
     } else {
       return res.status(200).json(result.data);
     }
-  
   } catch (error) {
     console.error('Error en Proxy:', error);
     return res.status(error.status || 500).json(error.data || { message: 'Error inesperado en proxy' });

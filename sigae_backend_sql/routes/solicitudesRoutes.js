@@ -6,7 +6,7 @@ import * as solicitudesController from '../controllers/solicitudesController.js'
 router.post('/guardar/:claveUsrRegistro/:claveEmpleado', solicitudesController.postGuardarSolicitud);
 
 // 2. LISTADO SEGMENTADO POR ROL
-router.get('/get-todas/:rol/:identificador', solicitudesController.getTodasSolicitudes);
+router.get('/get-todas', solicitudesController.getTodasSolicitudes);
 
 // 3. DETALLE DE SEGUIMIENTO
 router.get('/seguimiento/:idSolicitud', solicitudesController.getSeguimientoSolicitud);

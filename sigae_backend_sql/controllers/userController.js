@@ -100,7 +100,7 @@ const getUserCheck = async (req, res) => {
 
     return res.json(userSQL ? {
       id: userSQL.idUsuario,
-      numEmp: userSQL.claveEmpleado,
+      claveEmpleado: userSQL.claveEmpleado,
       rol: rolSQL // Cambiado de role a rol
     } : { id: 0, rol: "user" }); // Cambiado
 

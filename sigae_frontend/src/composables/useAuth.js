@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 // Estado global del usuario
 const usuarioLogueado = ref({
   nombre: 'Administrador', 
-  rol: 'admin',              // Cambiamos 'rh' por 'admin' para tu prueba
+  rol: 'Admin',              // Cambiamos 'rh' por 'admin' para tu prueba
   claveEmpleado: 'ADM001',   // Asegúrate de que este ID exista en tu SQL
 })
 

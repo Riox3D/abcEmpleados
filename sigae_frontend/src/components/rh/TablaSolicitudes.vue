@@ -51,7 +51,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router' // Necesario para navegar
 import { solicitudesService } from 'src/services/solicitudesService'
 import { useAuth } from 'src/composables/useAuth'
-
+import { watch } from 'vue'
 const { usuarioLogueado } = useAuth()
 const router = useRouter()
 const rows = ref([])
@@ -59,17 +59,12 @@ const loading = ref(false)
 
 // Función para cargar los datos reales desde SQL Server
 const cargarSolicitudes = async () => {
+  if (!usuarioLogueado.value || !usuarioLogueado.value.claveEmpleado) return 
+  
   try {
     loading.value = true
     
-    // Agregamos una validación para que no truene si el usuario no ha cargado
-    if (!usuarioLogueado.value) return 
-
-    // Usamos 'usuarioLogueado' y verificamos los nombres de los campos
-    const data = await solicitudesService.obtenerTodas(
-      usuarioLogueado.value.rol, // O 'rol' según tu userController.js
-      usuarioLogueado.value.claveEmpleado
-    )
+    const data = await solicitudesService.obtenerTodas()
     
     rows.value = data || []
   } catch (error) {
@@ -78,6 +73,16 @@ const cargarSolicitudes = async () => {
     loading.value = false
   }
 }
+watch(
+  () => usuarioLogueado.value, 
+  (nuevoUsuario) => {
+    if (nuevoUsuario && nuevoUsuario.claveEmpleado) {
+      console.log("Vigilante: Usuario detectado, cargando solicitudes...")
+      cargarSolicitudes()
+    }
+  }, 
+  { immediate: true, deep: true } // immediate hace que lo intente apenas cargue el componente
+)
 
 onMounted(() => {
   cargarSolicitudes()

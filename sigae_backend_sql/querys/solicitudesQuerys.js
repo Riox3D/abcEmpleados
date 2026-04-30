@@ -1,6 +1,4 @@
 export const solicitudesQueries = {
-    // --- TUS CONSULTAS ORIGINALES ---
-    
     // 1. Insertar la solicitud inicial (RH)
     insertarSolicitud: `
         INSERT INTO Solicitudes (
@@ -36,32 +34,19 @@ export const solicitudesQueries = {
         );
     `,
 
-    // 4. Tu consulta original de seguimiento (Lista por usuario)
-    getSeguimiento: `
+    // 4. Listado para la tabla principal (Resuelve el error 404 y el array vacío)
+    getTodasSolicitudes: `
         SELECT 
-            s.idSolicitud, s.fechaRegistro, s.nombreEmpleado, 
-            m.descripcion as movimiento, s.estatus 
+            s.*, 
+            m.descripcion AS movimiento 
         FROM Solicitudes s
-        INNER JOIN c_movimientos m ON s.idTipoMovimiento = m.idTipoMovimiento
-        WHERE s.claveEmpleado = @claveEmpleado OR s.claveUsrRegistro = @claveUsrRegistro
+        LEFT JOIN c_movimientos m ON s.idTipoMovimiento = m.idTipoMovimiento
+        WHERE @rol = 'Admin' 
+           OR s.claveEmpleado = @identificador 
+           OR s.claveUsrRegistro = @identificador
     `,
 
-
-
-    // 5. Listados para la Tabla principal segun el ROL
-    obtenerTodasRH: `
-        SELECT s.*, m.descripcion AS movimiento 
-        FROM Solicitudes s
-        INNER JOIN c_movimientos m ON s.idTipoMovimiento = m.idTipoMovimiento
-    `,
-    obtenerPorEstatus: `
-        SELECT s.*, m.descripcion AS movimiento 
-        FROM Solicitudes s
-        INNER JOIN c_movimientos m ON s.idTipoMovimiento = m.idTipoMovimiento
-        WHERE s.estatus = @estatus
-    `,
-
-    // 6. Detalle profundo de una sola solicitud (Para SeguimientoSolicitud.vue)
+    // 5. Detalle profundo de una sola solicitud (Para SeguimientoSolicitud.vue)
     getDetalleSolicitud: `
         SELECT 
             s.*, m.descripcion as movimiento 
@@ -70,19 +55,19 @@ export const solicitudesQueries = {
         WHERE s.idSolicitud = @idSolicitud
     `,
 
-    // 7. Catálogo para que el Gerente elija el RBAC
+    // 6. Catálogo para que el Gerente elija el RBAC
     getCatRbac: `
         SELECT idRbac, nombreRbac FROM c_rbac WHERE estatus = 1
     `,
 
-    // 8. Actualizar el estatus del flujo (Mueve la solicitud entre TI, Gerencia y Proceso)
+    // 7. Actualizar el estatus del flujo (Mueve la solicitud entre TI, Gerencia y Proceso)
     actualizarEstatusSolicitud: `
         UPDATE Solicitudes 
         SET estatus = @nuevoEstatus
         WHERE idSolicitud = @idSolicitud
     `,
 
-    // 9. Actividades reales de una solicitud 
+    // 8. Actividades reales de una solicitud 
     getActividadesSolicitud: `
         SELECT sa.*, gd.descripcionDetalle as titulo
         FROM solicitud_actividades sa

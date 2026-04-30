@@ -77,21 +77,28 @@ export const postGuardarSolicitud = async (req, res) => {
 // 1. LISTADO DE SOLICITUDES (Filtrado por Rol)
 export const getTodasSolicitudes = async (req, res) => {
     try {
-      // 1. Atrapamos lo que manda la ruta (aunque no lo uses aún)[cite: 3]
-      const { rol, identificador } = req.params; 
+      const { rol, identificador } = req.query;
       
-      // 2. Tu lógica de SQL que YA FUNCIONABA antes
-      const pool = await poolPromise;
-      const result = await pool.request().query(querys.getTodasSolicitudes); 
-      
-      // 3. Enviamos la respuesta
-      return res.json(result.recordset);
-    } catch (err) {
-      console.error("Error en el controlador:", err);
-      return res.status(500).json({ error: "Error al obtener solicitudes" });
-    }
-  };
+      console.log(`Buscando solicitudes en SQL para ROL: ${rol} con ID: ${identificador}`);
 
+      const pool = await poolPromise;
+      const result = await pool.request()
+        .input('rol', sql.NVarChar, rol)
+        .input('identificador', sql.NVarChar, identificador)
+        .query(solicitudesQueries.getTodasSolicitudes); 
+
+      // AGREGAMOS ESTO: Para ver la tabla cruda en la pantalla negra
+      console.log("Datos encontrados en BD:", result.recordset);
+
+      // Si no hay datos, aseguramos que mande un arreglo vacío [] y no otra cosa
+      const datosFinales = result.recordset || [];
+      return res.json(datosFinales);
+      
+    } catch (err) {
+      console.error("Error en SQL:", err);
+      return res.status(500).json({ error: "Error interno al consultar SQL" });
+    }
+};
 export const getSeguimientoSolicitud = async (req, res) => {
     try {
         const { idSolicitud } = req.params;
