@@ -1,0 +1,112 @@
+import { sql, poolPromise } from '../database/sqlConnection.js';
+import { querys } from '../querys/querys.js';
+
+const getUsers = async (req, res) => {
+  try {
+    let { correo } = req.params;
+    const claveExtraida = correo.split('@')[0];
+
+    const genericUser = {
+      idUsuario: 0,
+      nombre: "Usuario Genérico",
+      claveEmpleado: "999999",
+      rol: "user" // Cambiado de role a rol
+    };
+
+    let userFromSQL = null;
+    let rolFromSQL = "user"; // Cambiado para consistencia
+
+    try {
+      const pool = await poolPromise;
+
+      const resultUser = await pool.request()
+        .input('claveEmpleado', sql.NVarChar, claveExtraida)
+        .query(querys.getUser);
+
+      if (resultUser.recordset.length === 0) {
+        await pool.request()
+          .input('claveEmpleado', sql.NVarChar, claveExtraida)
+          .input('idrol', sql.Int, 1) 
+          .query(querys.insertUsuario);
+      }
+
+      const resultUser2 = await pool.request()
+        .input('claveEmpleado', sql.NVarChar, claveExtraida)
+        .query(querys.getUser);
+
+      userFromSQL = resultUser2.recordset[0];
+
+      const resultRole = await pool.request()
+        .input('claveEmpleado', sql.NVarChar, userFromSQL.claveEmpleado)
+        .query(querys.selectRol);
+
+      if (resultRole.recordset.length > 0) {
+        // Obtenemos el valor de la columna 'rol' de la DB
+        rolFromSQL = resultRole.recordset[0].rol; 
+      }
+
+    } catch (sqlErr) {
+      console.log("❗ Usando usuario genérico (Sin SQL)");
+    }
+
+    const finalUser = userFromSQL
+      ? {
+          id: userFromSQL.idUsuario,
+          email: correo,
+          name: "Cristian Cortes", 
+          claveEmpleado: userFromSQL.claveEmpleado,
+          rol: rolFromSQL, // Cambiado de role a rol
+          source: "SQL-Server-OK"
+        }
+      : {
+          id: genericUser.idUsuario,
+          email: correo,
+          name: genericUser.nombre,
+          claveEmpleado: genericUser.claveEmpleado,
+          rol: genericUser.rol, // Cambiado de role a rol
+          source: "Modo-Desarrollador"
+        };
+
+    return res.json(finalUser);
+
+  } catch (err) {
+    return res.json({ id: 0, name: "Error Fallback", rol: "user" }); // Cambiado
+  }
+};
+
+const getUserCheck = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let userSQL = null;
+    let rolSQL = "user";
+
+    try {
+      const pool = await poolPromise;
+      const userResult = await pool.request()
+        .input('idUsuario', sql.Int, id)
+        .query(querys.getUserByID);
+
+      if (userResult.recordset.length > 0) {
+        userSQL = userResult.recordset[0];
+        const roleResult = await pool.request()
+          .input('claveEmpleado', sql.NVarChar, userSQL.claveEmpleado)
+          .query(querys.selectRol);
+        
+        rolSQL = roleResult.recordset[0]?.rol || "user";
+      }
+    } catch (sqlErr) {
+      console.log("❗ Error en Check SQL");
+    }
+
+    return res.json(userSQL ? {
+      id: userSQL.idUsuario,
+      numEmp: userSQL.claveEmpleado,
+      rol: rolSQL // Cambiado de role a rol
+    } : { id: 0, rol: "user" }); // Cambiado
+
+  } catch (err) {
+    return res.json({ id: 0, rol: "user" }); // Cambiado
+  }
+};
+
+export { getUsers, getUserCheck };

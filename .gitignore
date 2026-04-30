@@ -1,1 +1,6 @@
-base_backend_sql/database/OracleClient/
+node_modules/
+*/node_modules/
+sigae_backend_sql/database/OracleClient/
+.quasar/
+dist/
+.DS_Store
