@@ -8,8 +8,8 @@
           </q-avatar>
           abcEmpleados
         </q-toolbar-title>
-
-        <div class="row items-center q-gutter-sm q-mr-md">
+         <!--
+         <div class="row items-center q-gutter-sm q-mr-md">
           <div class="text-subtitle2 text-weight-bold">Vista actual:</div>
           <q-select
             v-model="rolSeleccionado"
@@ -27,7 +27,7 @@
               <q-icon name="switch_account" color="primary" />
             </template>
           </q-select>
-        </div>
+        </div>-->
       </q-toolbar>
 
       <q-tabs align="left">
@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+/*import { ref } from 'vue'
 import { useAuth } from 'src/composables/useAuth'
 
 const { simularInicioSesion } = useAuth()
@@ -66,5 +66,5 @@ function cambiarRolActivo(nuevoRol) {
   if (datosRol) {
     simularInicioSesion(datosRol.value, datosRol.nombre, datosRol.clave)
   }
-}
+} */
 </script>

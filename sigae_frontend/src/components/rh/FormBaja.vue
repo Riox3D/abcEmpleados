@@ -11,7 +11,6 @@
           <q-card-section class="q-pa-md">
             <div class="text-subtitle2 text-grey-8 q-mb-sm">1. Localiza al empleado</div>
             
-            <!-- Aquí está la magia: El Autocomplete -->
             <q-select
               v-model="empleado"
               use-input
@@ -39,7 +38,6 @@
                 </q-item>
               </template>
 
-              <!-- Personalizamos cómo se ven los resultados en la lista -->
               <template v-slot:option="scope">
                 <q-item v-bind="scope.itemProps">
                   <q-item-section avatar>
@@ -111,7 +109,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { api } from 'boot/axios' // 1. IMPORTANTE: Agrega esta importación
+import { api } from 'boot/axios' 
 import { empleadosService } from 'src/services/empleadosService'
 import { useQuasar } from 'quasar';
 
@@ -139,9 +137,7 @@ function limpiarBusqueda() {
   observaciones.value = ''
 }
 const $q = useQuasar()
-// 2. CAMBIO AQUÍ: La función ahora es async y guarda en la BD
 async function submit() {
-  // 1. Primero lanzamos la confirmación
   $q.dialog({
     title: 'Confirmar Baja Definitiva',
     message: `¿Estás seguro de que deseas procesar la baja de ${empleado.value.nombre}? Esta acción quedará registrada en el historial.`,

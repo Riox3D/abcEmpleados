@@ -18,14 +18,14 @@
               </div>
             </div>
             <q-chip :color="colorEstatus" text-color="white" icon="info" class="text-weight-bold">
-              {{ solicitud.estatusSolicitud }}
+              {{ solicitud.estatus }}
             </q-chip>
           </q-card-section>
         </q-card>
 
         <div class="q-mb-lg">
           <q-card
-            v-if="esValidadorTI && solicitud.estatusSolicitud === 'Pendiente de validación TI'"
+            v-if="solicitud.estatus === 'PendienteValidacionTI'"
             class="bg-orange-1 border-orange shadow-2 q-pa-md"
           >
             <div class="text-h6 text-orange-9 q-mb-sm row items-center">
@@ -52,7 +52,7 @@
           </q-card>
 
           <q-card
-            v-if="esGerente && solicitud.estatusSolicitud === 'Pendiente aprobación gerencial'"
+            v-if="solicitud.estatus === 'ValidacionGerencial'"
             class="bg-blue-1 border-blue shadow-2 q-pa-md"
           >
             <div class="text-h6 text-blue-9 q-mb-sm row items-center">
@@ -102,6 +102,20 @@
               </q-card-section>
               <q-list separator>
                 <q-item>
+  <q-item-section>
+    <q-item-label caption>Nombre del Empleado</q-item-label>
+    <q-item-label class="text-weight-bold text-subtitle1 text-primary">
+      {{ solicitud.nombreEmpleado || 'No disponible' }}
+    </q-item-label>
+  </q-item-section>
+</q-item>
+<q-item>
+<q-item-section>
+    <q-item-label caption>CURP</q-item-label>
+    <q-item-label>{{ solicitud.curpEmpleado || 'No disponible' }}</q-item-label>
+  </q-item-section>
+</q-item>
+                <q-item>
                   <q-item-section>
                     <q-item-label caption>Gerencia / Dirección</q-item-label>
                     <q-item-label class="text-weight-bold">{{ solicitud.gerencia }}</q-item-label>
@@ -119,12 +133,8 @@
                     <q-item-label>{{ solicitud.nssIssste }}</q-item-label>
                   </q-item-section>
                 </q-item>
-                <q-item>
-  <q-item-section>
-    <q-item-label caption>CURP</q-item-label>
-    <q-item-label>{{ solicitud.curpEmpleado || 'No disponible' }}</q-item-label>
-  </q-item-section>
-</q-item>
+                
+  
               </q-list>
             </q-card>
 
@@ -159,7 +169,7 @@
                   <q-icon name="checklist" size="sm" class="q-mr-sm" /> Avance de Tareas
                 </div>
                 <q-btn
-                  v-if="esResponsable && solicitud.estatusSolicitud === 'En proceso'"
+                  v-if="solicitud.estatus=== 'En Proceso'"
                   label="Actualizar"
                   color="primary"
                   icon="edit"
@@ -170,7 +180,7 @@
 
               <q-card-section class="q-pa-lg">
                 <div
-                  v-if="solicitud.estatusSolicitud?.includes('Pendiente de validación')"
+                  v-if="solicitud.estatus?.includes('PendienteValidacion')"
                   class="text-center q-pa-xl"
                 >
                   <q-icon name="lock" size="lg" color="grey-4" />
@@ -219,13 +229,13 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { useAuth } from 'src/composables/useAuth'
+//import { useAuth } from 'src/composables/useAuth'
 import DialogRegistrarAvance from 'components/rh/DialogRegistrarAvance.vue'
 import { solicitudesService } from 'src/services/solicitudesService'
 
 const route = useRoute()
 const $q = useQuasar()
-const { esValidadorTI, esGerente, esResponsable } = useAuth()
+//const {esResponsable } = useAuth()
 
 const cargando = ref(true)
 const mostrarDialogo = ref(false)
@@ -235,7 +245,7 @@ const observacionesTI = ref('')
 const observacionesGerente = ref('')
 
 const colorEstatus = computed(() => {
-  const s = solicitud.value.estatusSolicitud
+  const s = solicitud.value.estatus
   if (s?.includes('TI')) return 'orange'
   if (s?.includes('gerencial')) return 'blue'
   if (s === 'En proceso') return 'positive'
@@ -278,7 +288,7 @@ async function validarSolicitud(tipo) {
     })
 
     if (res) {
-      solicitud.value.estatusSolicitud = nuevoEstatus
+      solicitud.value.estatus = nuevoEstatus
       $q.notify({ color: 'positive', message: 'Estatus actualizado' })
     }
   } catch (err) {

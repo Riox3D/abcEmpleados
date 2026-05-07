@@ -100,16 +100,25 @@ export const getTodasSolicitudes = async (req, res) => {
 };
 export const getSeguimientoSolicitud = async (req, res) => {
     try {
-        const { id } = req.params; 
+        // Imprimimos en la consola de Node para ver EXACTAMENTE qué está llegando
+        console.log("Parámetros recibidos en backend_sql:", req.params);
+
+        // EXTRAEMOS CUALQUIERA DE LOS DOS NOMBRES QUE ESTÉ EN EL ROUTER
+        const folio = req.params.id || req.params.idSolicitud;
+
+        // Si el folio llega vacío, detenemos todo antes de ir a SQL
+        if (!folio) {
+            return res.status(400).json({ ok: false, message: "No se recibió ningún número de folio en la URL" });
+        }
+
         const pool = await poolPromise;
         
-        // Usamos la variable 'id' para las consultas
         const resultDetalle = await pool.request()
-            .input('idSolicitud', sql.BigInt, id) 
+            .input('idSolicitud', sql.BigInt, folio) // Usamos 'folio'
             .query(solicitudesQueries.getDetalleSolicitud);
 
         const resultPasos = await pool.request()
-            .input('idSolicitud', sql.BigInt, id) 
+            .input('idSolicitud', sql.BigInt, folio) // Usamos 'folio'
             .query(solicitudesQueries.getActividadesSolicitud);
 
         if (resultDetalle.recordset.length > 0) {
@@ -119,10 +128,10 @@ export const getSeguimientoSolicitud = async (req, res) => {
             };
             res.json(respuestaFinal);
         } else {
-            // Si el ID es correcto pero no hay datos, caerá aquí
-            res.status(404).json({ ok: false, message: "Folio no encontrado en SQL" });
+            res.status(404).json({ ok: false, message: `Folio ${folio} no encontrado en SQL` });
         }
     } catch (error) {
+        console.error("Error en getSeguimiento:", error.message);
         res.status(500).json({ error: error.message });
     }
 };

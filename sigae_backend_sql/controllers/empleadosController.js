@@ -12,7 +12,6 @@ export const buscarEmpleado = async (req, res) => {
         const { termino } = req.params; 
         const terminoMinusculas = termino.toLowerCase();
         
-        // Filtramos el JSON buscando coincidencias en ID o Nombre
         const resultados = mockHumanJSON.filter(empleado => 
             empleado.id.toLowerCase().includes(terminoMinusculas) || 
             empleado.nombre.toLowerCase().includes(terminoMinusculas)
