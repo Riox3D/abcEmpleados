@@ -101,6 +101,8 @@ import { ref, watch, onMounted } from 'vue' // Añadimos watch para detectar la 
 import { solicitudesService } from 'src/services/solicitudesService'
 import { empleadosService } from 'src/services/empleadosService' // Importamos el buscador
 import { useQuasar } from 'quasar'
+import { api } from 'boot/axios'
+
 const opcionesRbac = ref([])
 const $q = useQuasar()
 const cargando = ref(false)
@@ -145,11 +147,10 @@ watch(empleadoSeleccionado, (nuevoEmpleado) => {
 })
 onMounted(async () => {
   try {
-    const response = await api.get('/api/catalogos/rbac') // Ajusta esta ruta a la de tu backend
+    const response = await api.get('/api/catalogos/rbac')
     opcionesRbac.value = response.data
   } catch (error) {
     console.error("Error al cargar RBAC:", error)
-    $q.notify({ color: 'negative', message: 'No se pudieron cargar los perfiles RBAC' })
   }
 })
 async function submit() {

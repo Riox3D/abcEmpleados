@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { getMovimientos } from '../controllers/catalogosController.js';
-
+import { getRbac } from '../controllers/catalogosController.js';
 const router = Router();
 
 router.get('/get-movimientos', getMovimientos);
+router.get('/rbac', getRbac);
 
 export default router;

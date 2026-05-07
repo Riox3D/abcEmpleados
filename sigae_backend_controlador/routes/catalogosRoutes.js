@@ -7,5 +7,5 @@ const router = Router();
 router.get('/get-movimientos', proxyToSql);
 router.get('/get-rbac', proxyToSql);
 router.get('/get-responsables', proxyToSql);
-
+router.get('/rbac', (req, res) => proxyToSql(req, res, '/api/catalogos/rbac'));
 export default router;

@@ -12,4 +12,14 @@ export const getMovimientos = async (req, res) => {
         console.error("Error en SQL al obtener movimientos:", error.message);
         res.status(500).json({ error: "Error interno al consultar el catálogo" });
     }
+
+};
+export const getRbac = async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(catalogosQueries.getRbacActivos);
+        res.json(result.recordset);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
