@@ -7,6 +7,7 @@ import notifyRoutes from './routes/notifyRoutes.js'
 import fileRoutes from './routes/fileRoutes.js'
 import solicitudesRouter from './routes/solicitudesRoutes.js'
 import catalogosRouter from './routes/catalogosRoutes.js'
+import empleadosRoutes from './routes/empleadosRoutes.js';
 
 import { createServer } from 'http'
 
@@ -36,6 +37,7 @@ io.on('connection', (socket) => socketHandlers(socket, io))
 // Middleware y rutas
 app.use(express.json())
 app.use(cookieParser())
+app.use('/api/empleados', empleadosRoutes);
 app.use(cors({
   origin: config.FRONTEND_URL,
   credentials: true,

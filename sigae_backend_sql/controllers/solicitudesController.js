@@ -87,10 +87,9 @@ export const getTodasSolicitudes = async (req, res) => {
         .input('identificador', sql.NVarChar, identificador)
         .query(solicitudesQueries.getTodasSolicitudes); 
 
-      // AGREGAMOS ESTO: Para ver la tabla cruda en la pantalla negra
       console.log("Datos encontrados en BD:", result.recordset);
 
-      // Si no hay datos, aseguramos que mande un arreglo vacío [] y no otra cosa
+      // Si no hay datos, aseguramos que mande un arreglo vacío []
       const datosFinales = result.recordset || [];
       return res.json(datosFinales);
       
@@ -101,25 +100,27 @@ export const getTodasSolicitudes = async (req, res) => {
 };
 export const getSeguimientoSolicitud = async (req, res) => {
     try {
-        const { idSolicitud } = req.params;
+        const { id } = req.params; 
         const pool = await poolPromise;
         
+        // Usamos la variable 'id' para las consultas
         const resultDetalle = await pool.request()
-            .input('idSolicitud', sql.BigInt, idSolicitud)
+            .input('idSolicitud', sql.BigInt, id) 
             .query(solicitudesQueries.getDetalleSolicitud);
 
         const resultPasos = await pool.request()
-            .input('idSolicitud', sql.BigInt, idSolicitud)
+            .input('idSolicitud', sql.BigInt, id) 
             .query(solicitudesQueries.getActividadesSolicitud);
 
         if (resultDetalle.recordset.length > 0) {
             const respuestaFinal = {
                 ...resultDetalle.recordset[0],
-                pasos: resultPasos.recordset //mandamos las tareas 
+                pasos: resultPasos.recordset 
             };
             res.json(respuestaFinal);
         } else {
-            res.status(404).json({ ok: false, message: "Folio no encontrado" });
+            // Si el ID es correcto pero no hay datos, caerá aquí
+            res.status(404).json({ ok: false, message: "Folio no encontrado en SQL" });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });

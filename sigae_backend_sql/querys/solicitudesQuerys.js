@@ -51,7 +51,7 @@ export const solicitudesQueries = {
         SELECT 
             s.*, m.descripcion as movimiento 
         FROM Solicitudes s
-        INNER JOIN c_movimientos m ON s.idTipoMovimiento = m.idTipoMovimiento
+        LEFT JOIN c_movimientos m ON s.idTipoMovimiento = m.idTipoMovimiento
         WHERE s.idSolicitud = @idSolicitud
     `,
 
@@ -69,7 +69,7 @@ export const solicitudesQueries = {
 
     // 8. Actividades reales de una solicitud 
     getActividadesSolicitud: `
-        SELECT sa.*, gd.descripcionDetalle as titulo
+        SELECT sa.*, gd.descripcion as titulo
         FROM solicitud_actividades sa
         INNER JOIN c_grupos_detalle gd ON sa.idGrupoDetalle = gd.idGrupoDetalle
         WHERE sa.idSolicitud = @idSolicitud

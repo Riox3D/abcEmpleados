@@ -117,8 +117,12 @@ const columns = [
     label: 'Fecha Registro', 
     field: 'fechaRegistro', // Campo de tu query[
     align: 'left',
-    format: val => new Date(val).toLocaleDateString() // Formato legible
-  },
+    format: val => {
+    if (!val) return '';
+    // Le forzamos la zona horaria UTC para que no le reste horas a la fecha
+    return new Date(val).toLocaleDateString('es-MX', { timeZone: 'UTC' });
+  }
+},
   { 
     name: 'empleado', 
     label: 'Empleado', 

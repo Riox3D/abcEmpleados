@@ -119,6 +119,12 @@
                     <q-item-label>{{ solicitud.nssIssste }}</q-item-label>
                   </q-item-section>
                 </q-item>
+                <q-item>
+  <q-item-section>
+    <q-item-label caption>CURP</q-item-label>
+    <q-item-label>{{ solicitud.curpEmpleado || 'No disponible' }}</q-item-label>
+  </q-item-section>
+</q-item>
               </q-list>
             </q-card>
 
@@ -164,7 +170,7 @@
 
               <q-card-section class="q-pa-lg">
                 <div
-                  v-if="solicitud.estatusSolicitud.includes('Pendiente de validación')"
+                  v-if="solicitud.estatusSolicitud?.includes('Pendiente de validación')"
                   class="text-center q-pa-xl"
                 >
                   <q-icon name="lock" size="lg" color="grey-4" />
@@ -215,7 +221,7 @@ import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuth } from 'src/composables/useAuth'
 import DialogRegistrarAvance from 'components/rh/DialogRegistrarAvance.vue'
-import { apiObtenerSeguimiento, apiActualizarAvances } from 'src/services/solicitudesService'
+import { solicitudesService } from 'src/services/solicitudesService'
 
 const route = useRoute()
 const $q = useQuasar()
@@ -239,32 +245,61 @@ const colorEstatus = computed(() => {
 onMounted(async () => {
   try {
     cargando.value = true
-    const data = await apiObtenerSeguimiento(route.params.id)
-    solicitud.value = data
-    pasos.value = data.pasos || []
+    // Verificamos qué ID estamos mandando
+    console.log("Buscando folio:", route.params.id) 
+    
+    const data = await solicitudesService.obtenerSeguimiento(route.params.id)
+    
+    if (data) {
+      solicitud.value = data
+      pasos.value = data.pasos || []
+    }
+  } catch (err) {
+    console.error('Error al cargar seguimiento:', err.response?.status, err.message)
+    $q.notify({
+      color: 'negative',
+      message: `Error ${err.response?.status}: No se encontró la solicitud.`
+    })
   } finally {
     cargando.value = false
   }
 })
-
-// Función para simular el cambio de estatus tras validar
 async function validarSolicitud(tipo) {
-  $q.loading.show()
-  await new Promise((r) => setTimeout(r, 1000))
+  try {
+    $q.loading.show({ message: 'Actualizando estatus...' })
+    
+    let nuevoEstatus = (tipo === 'aprobado_ti') ? 'ValidacionGerencial' : 'En proceso'
+    let obs = (tipo === 'aprobado_ti') ? observacionesTI.value : observacionesGerente.value
 
-  if (tipo === 'aprobado_ti') {
-    solicitud.value.estatusSolicitud = 'Pendiente aprobación gerencial'
-  } else if (tipo === 'aprobado_gerente') {
-    solicitud.value.estatusSolicitud = 'En proceso'
+    const res = await solicitudesService.actualizarEstatus(solicitud.value.idSolicitud, {
+      estatus: nuevoEstatus,
+      observaciones: obs,
+      claveUsuario: 'ADM001' 
+    })
+
+    if (res) {
+      solicitud.value.estatusSolicitud = nuevoEstatus
+      $q.notify({ color: 'positive', message: 'Estatus actualizado' })
+    }
+  } catch (err) {
+    console.error('Error en validación:', err)
+    $q.notify({ color: 'negative', message: 'Error al actualizar' })
+  } finally {
+    $q.loading.hide()
   }
-
-  $q.loading.hide()
-  $q.notify({ color: 'positive', message: 'Solicitud actualizada correctamente' })
 }
 
 async function actualizarAvances(nuevosPasos) {
-  await apiActualizarAvances(solicitud.value.idSolicitud, nuevosPasos)
-  pasos.value = nuevosPasos
-  mostrarDialogo.value = false
+  try {
+    await solicitudesService.actualizarEstatus(solicitud.value.idSolicitud, {
+      pasos: nuevosPasos
+    })
+    pasos.value = nuevosPasos
+    mostrarDialogo.value = false
+    $q.notify({ color: 'positive', message: 'Avances guardados' })
+  } catch (err) {
+    console.error('Error al actualizar avances:', err)
+    $q.notify({ color: 'negative', message: 'No se pudieron guardar los avances' })
+  }
 }
 </script>

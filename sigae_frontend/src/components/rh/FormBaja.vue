@@ -10,21 +10,58 @@
         <q-card flat bordered class="bg-grey-1" style="border-radius: 8px">
           <q-card-section class="q-pa-md">
             <div class="text-subtitle2 text-grey-8 q-mb-sm">1. Localiza al empleado</div>
-            <q-input v-model="busqueda" label="Ingresa ID o Nombre completo" outlined bg-color="white" dense
-              hint="Presiona Enter para buscar" @keyup.enter="buscarEmpleado" class="full-width">
+            
+            <!-- Aquí está la magia: El Autocomplete -->
+            <q-select
+              v-model="empleado"
+              use-input
+              hide-selected
+              fill-input
+              input-debounce="300"
+              :options="opcionesEmpleados"
+              @filter="filtrarEmpleados"
+              option-label="nombre"
+              label="Ingresa ID o Nombre completo"
+              outlined
+              bg-color="white"
+              dense
+              class="full-width"
+            >
               <template v-slot:prepend>
                 <q-icon name="search" color="primary" />
               </template>
-              <template v-slot:append>
-                <q-btn round dense flat icon="arrow_forward" color="primary" @click="buscarEmpleado" />
+              
+              <template v-slot:no-option>
+                <q-item>
+                  <q-item-section class="text-grey">
+                    No se encontraron empleados con esa búsqueda
+                  </q-item-section>
+                </q-item>
               </template>
-            </q-input>
+
+              <!-- Personalizamos cómo se ven los resultados en la lista -->
+              <template v-slot:option="scope">
+                <q-item v-bind="scope.itemProps">
+                  <q-item-section avatar>
+                    <q-avatar color="primary" text-color="white" icon="person" size="sm" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ scope.opt.nombre }}</q-item-label>
+                    <q-item-label caption class="text-primary text-weight-bold">{{ scope.opt.id }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label caption>{{ scope.opt.area }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+
           </q-card-section>
         </q-card>
       </div>
 
       <transition name="q-transition--fade">
-        <div class="col-12 row q-col-gutter-md items-center" v-if="empleado.id">
+        <div class="col-12 row q-col-gutter-md items-center" v-if="empleado && empleado.id">
           <div class="col-12 col-sm-7">
             <q-item class="bg-white shadow-1 rounded-borders q-pa-md" style="border: 1px solid #e0e0e0">
               <q-item-section avatar>
@@ -67,47 +104,86 @@
     <q-separator class="q-mt-xl q-mb-md" />
     <div class="row justify-end q-gutter-sm">
       <q-btn label="Procesar Baja Definitiva" icon="delete_forever" color="negative" unelevated
-        class="q-px-lg text-weight-bold" :disable="!empleado.id || !fechaBaja" @click="submit" />
+        class="q-px-lg text-weight-bold" :disable="!empleado || !empleado.id || !fechaBaja" @click="submit" />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { api } from 'boot/axios' // 1. IMPORTANTE: Agrega esta importación
+import { empleadosService } from 'src/services/empleadosService'
+import { useQuasar } from 'quasar';
 
 const emit = defineEmits(['submit'])
 
-const busqueda = ref('')
-const empleado = ref({})
+const empleado = ref(null)
+const opcionesEmpleados = ref([])
 const fechaBaja = ref('')
 const observaciones = ref('')
 
-function buscarEmpleado() {
-  if (busqueda.value.trim() !== '') {
-
-    empleado.value = {
-      id: 'EMP-1234',
-      nombre: 'Juan Pérez Rodríguez',
-      area: 'Tecnologías de la Información',
-    }
-  } else {
-    empleado.value = {}
+async function filtrarEmpleados(val, update, abort) {
+  if (val.length < 2) {
+    abort()
+    return
   }
+  const resultados = await empleadosService.buscar(val)
+  update(() => {
+    opcionesEmpleados.value = resultados
+  })
 }
 
 function limpiarBusqueda() {
-  busqueda.value = ''
-  empleado.value = {}
+  empleado.value = null
   fechaBaja.value = ''
   observaciones.value = ''
 }
+const $q = useQuasar()
+// 2. CAMBIO AQUÍ: La función ahora es async y guarda en la BD
+async function submit() {
+  // 1. Primero lanzamos la confirmación
+  $q.dialog({
+    title: 'Confirmar Baja Definitiva',
+    message: `¿Estás seguro de que deseas procesar la baja de ${empleado.value.nombre}? Esta acción quedará registrada en el historial.`,
+    cancel: {
+      label: 'Cancelar',
+      color: 'grey',
+      flat: true
+    },
+    ok: {
+      label: 'Sí, Procesar',
+      color: 'negative', 
+      unelevated: true
+    },
+    persistent: true // Obliga a elegir una opción
+  }).onOk(async () => {
+    
+    try {
+      const url = `api/solicitudes/guardar/10/${empleado.value.id}`
 
-function submit() {
+      const respuesta = await api.post(url, {
+        idTipoMovimiento: 2, // Baja
+        fechaEfectiva: fechaBaja.value,
+        nombreEmpleado: empleado.value.nombre, 
+        curpEmpleado: empleado.value.curp,
+        observaciones: observaciones.value
+      })
 
-  emit('submit', {
-    claveEmpleado: empleado.value.id,
-    observaciones: observaciones.value,
-    fechaBaja: fechaBaja.value
+      if (respuesta.status === 200 || respuesta.data.success) {
+        $q.notify({
+          color: 'positive',
+          message: 'Baja registrada correctamente',
+          icon: 'check'
+        })
+        emit('submit', { ok: true })
+      }
+    } catch (error) {
+      console.error("Error al procesar la baja:", error)
+      $q.notify({
+        color: 'negative',
+        message: 'No se pudo registrar la baja en el servidor'
+      })
+    }
   })
 }
 </script>

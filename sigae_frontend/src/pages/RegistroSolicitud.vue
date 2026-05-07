@@ -29,7 +29,7 @@
 
           <q-separator v-if="tipoMovimiento" />
 
-          <div class="q-pa-md">
+          <div class="q-pa-md">            
             <transition name="q-transition--fade" mode="out-in">
               <FormAlta v-if="tipoMovimiento === 1" @submit="enviarSolicitud" />
               <FormBaja v-else-if="tipoMovimiento === 2" @submit="enviarSolicitud" />
@@ -51,60 +51,29 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useQuasar } from 'quasar'
-import api from 'src/services/api'
+import { api } from 'boot/axios' 
 import FormAlta from 'src/components/rh/FormAlta.vue'
 import FormBaja from 'src/components/rh/FormBaja.vue'
 import FormCambio from 'src/components/rh/FormCambio.vue'
 
 const router = useRouter()
-const $q = useQuasar()
 
 const tipoMovimiento = ref(null)
 const opcionesMovimiento = ref([])
 
-const usuario = ref({
-  claveUsuario: 'EMP01'
-})
-
-
 onMounted(async () => {
   try {
-    const response = await api.get('/movimientos')
+    const response = await api.get('api/catalogos/get-movimientos') 
     opcionesMovimiento.value = response.data
   } catch (error) {
-    console.error('Error al cargar movimientos:', error)
+    console.error('Error al cargar movimientos. Verifica que la ruta /catalogos/movimientos exista en tu proxy:', error)
   }
 })
 
-async function enviarSolicitud(data) {
-  const payload = {
-    claveUsuario: usuario.value.claveUsuario,
-    idTipoMovimiento: tipoMovimiento.value,
-    claveEmpleado: data.claveEmpleado
-  }
 
-  try {
-    $q.loading.show({ message: 'Guardando solicitud en BD...' })
-
-    const response = await api.post('/solicitudes', payload)
-
-    $q.notify({
-      color: 'positive',
-      icon: 'check',
-      message: '¡Solicitud guardada con el Folio: ' + response.data.idGenerado
-    })
-
+function enviarSolicitud(respuestaDelFormulario) {
+  if(respuestaDelFormulario && respuestaDelFormulario.ok) {
     router.push('/')
-
-  } catch (error) {
-    $q.notify({
-      color: 'negative',
-      icon: 'error',
-      message: 'Error al guardar: ' + error.message
-    })
-  } finally {
-    $q.loading.hide()
   }
 }
 </script>
