@@ -15,7 +15,7 @@ export const solicitudesQueries = {
     // 2. Obtener configuración de actividades según el RBAC seleccionado
     getActividadesPorRbac: `
         SELECT 
-            rg.idGrupo, rg.idGrupoDetalle, ra.correoResponsable, gd.descripcionDetalle
+            rg.idGrupo, rg.idGrupoDetalle, ra.correoResponsable, gd.descripcion
         FROM c_rbac_grupos rg
         INNER JOIN c_grupos_detalle gd ON rg.idGrupoDetalle = gd.idGrupoDetalle
         INNER JOIN c_responsables_actividad ra ON gd.idResponsable = ra.idResponsable

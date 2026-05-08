@@ -9,4 +9,5 @@ export const catalogosQueries = {
         FROM c_rbac 
         WHERE estatus = 1
     `
+    
 };

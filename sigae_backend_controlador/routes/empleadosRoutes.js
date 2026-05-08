@@ -1,4 +1,8 @@
 import express from 'express';
+//import { getCatalogoEmpleados } from '../controllers/empleadosController.js';
+//import { proxyToSql, proxyToSqlAuth,proxyToSqlAuthRol, proxyToSqlNotify,proxyToSqlNotifyEnviar, proxyToSqlNotifyRechazar  } from '../controllers/sqlController.js'
+import { authMiddleware,roleMiddleware } from '../middleware/authMiddleware.js'
+
 
 const router = express.Router();
 
@@ -38,4 +42,5 @@ router.get('/buscar/:termino', async (req, res) => {
     }
 });
 
+//router.get('/getCatalogoEmpleados', authMiddleware, proxyToSql);
 export default router;
