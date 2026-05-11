@@ -8,14 +8,15 @@
         <q-select
           v-model="empleadoSeleccionado"
           use-input
-          hide-selected
-          fill-input
-          input-debounce="300"
+          input-debounce="100"
           :options="opcionesEmpleados"
+          @update:model-value="actualizarEmpleado"
           @filter="filtrarEmpleados"
-          option-label="nombre"
+          option-label="nombreEmpleado"
+          option-value="claveEmpleado"
           label="1. Busca al empleado en HUMAN (ID o Nombre) *"
           outlined
+          clearable
           bg-color="blue-1"
         >
           <template v-slot:prepend>
@@ -97,17 +98,17 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue' // Añadimos watch para detectar la selección
-import { solicitudesService } from 'src/services/solicitudesService'
-import { empleadosService } from 'src/services/empleadosService' // Importamos el buscador
+import { ref, onMounted } from 'vue' // Añadimos watch para detectar la sel ección
+//import { empleadosService } from 'src/services/empleadosService' // Importamos el buscador
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
+import solicitudesService from 'src/services/solicitudesService';
 
 const opcionesRbac = ref([])
 const $q = useQuasar()
 const cargando = ref(false)
 const emit = defineEmits(['submit'])
-
+const empleados = ref([])
 const empleadoSeleccionado = ref(null)
 const opcionesEmpleados = ref([])
 
@@ -121,18 +122,39 @@ const form = ref({
 })
 
 // 2. Lógica para buscar en "Human"
-async function filtrarEmpleados(val, update, abort) {
-  if (val.length < 2) {
-    abort()
-    return
-  }
-  const resultados = await empleadosService.buscar(val)
-  update(() => {
-    opcionesEmpleados.value = resultados
-  })
+async function filtrarEmpleados(val, update) {
+ 
+  if (val === "") {
+        update(() => {
+          opcionesEmpleados.value = [...empleados.value];
+
+          // here you have access to "ref" which
+          // is the Vue reference of the QSelect
+        });
+        return;
+      }
+
+      update(() => {
+        const needle = val.toUpperCase();
+        opcionesEmpleados.value = empleados.value.filter((v) =>
+          v.nombreEmpleado.toUpperCase().includes(needle)
+        );
+      });
 }
 
-watch(empleadoSeleccionado, (nuevoEmpleado) => {
+async function actualizarEmpleado(empleado) {
+  console.log("Empleado seleccionado:",empleado)
+  try {
+   // const response = await solicitudesService.getEmpleado(empleado.claveEmpleado)
+   const response = await api.get('/api/empleados/getEmpleado/'+empleado.claveEmpleado)
+    console.log("Empleado elegido:",response)
+  } catch (error) {
+    console.error("Error al cargar empleado:", error)
+  }
+}
+
+
+/*watch(empleadoSeleccionado, (nuevoEmpleado) => {
   console.log('Datos del empleado recibido:', nuevoEmpleado)
   if (nuevoEmpleado) {
     form.value.claveEmpleado = nuevoEmpleado.id
@@ -144,7 +166,7 @@ watch(empleadoSeleccionado, (nuevoEmpleado) => {
     form.value.nombreEmpleado = ''
     form.value.curpEmpleado = ''
   }
-})
+})*/
 onMounted(async () => {
   try {
     const response = await api.get('/api/catalogos/rbac')
@@ -152,7 +174,19 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error al cargar RBAC:", error)
   }
-})
+  try {
+    const response = await api.get('/api/empleados/getCatalogoEmpleados')
+    empleados.value = response.data.empleados.map((empleado) => ({ 
+      claveEmpleado: empleado[0],
+      nombreEmpleado: empleado[1],
+    }))  
+    opcionesEmpleados.value = empleados.value
+    console.log(opcionesEmpleados.value)
+  } catch (error) {
+    console.error("Error al cargar RBAC:", error)
+  }
+}
+)
 async function submit() {
   if (!form.value.claveEmpleado) {
     $q.notify({ color: 'warning', message: 'Primero selecciona un empleado de Human' })

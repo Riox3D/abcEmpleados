@@ -84,25 +84,18 @@ export const getTodasSolicitudes = async (req, res) => {
 };
 export const getSeguimientoSolicitud = async (req, res) => {
     try {
-        // Imprimimos en la consola de Node para ver EXACTAMENTE qué está llegando
-        console.log("Parámetros recibidos en backend_sql:", req.params);
-
-        // EXTRAEMOS CUALQUIERA DE LOS DOS NOMBRES QUE ESTÉ EN EL ROUTER
-        const folio = req.params.id || req.params.idSolicitud;
-
-        // Si el folio llega vacío, detenemos todo antes de ir a SQL
-        if (!folio) {
-            return res.status(400).json({ ok: false, message: "No se recibió ningún número de folio en la URL" });
-        }
+        const { idSolicitud } = req.params; 
 
         const pool = await poolPromise;
         
+        // 2. Buscamos la solicitud
         const resultDetalle = await pool.request()
-            .input('idSolicitud', sql.BigInt, folio) // Usamos 'folio'
+            .input('idSolicitud', sql.BigInt, idSolicitud)
             .query(solicitudesQueries.getDetalleSolicitud);
 
+        // 3. Buscamos las tareas
         const resultPasos = await pool.request()
-            .input('idSolicitud', sql.BigInt, folio) // Usamos 'folio'
+            .input('idSolicitud', sql.BigInt, idSolicitud)
             .query(solicitudesQueries.getActividadesSolicitud);
 
         if (resultDetalle.recordset.length > 0) {
@@ -112,27 +105,29 @@ export const getSeguimientoSolicitud = async (req, res) => {
             };
             res.json(respuestaFinal);
         } else {
-            res.status(404).json({ ok: false, message: `Folio ${folio} no encontrado en SQL` });
+            res.status(404).json({ ok: false, message: `Folio no encontrado` });
         }
     } catch (error) {
-        console.error("Error en getSeguimiento:", error.message);
+        console.error("Error en getSeguimientoSolicitud:", error.message);
         res.status(500).json({ error: error.message });
     }
 };
 
 export const actualizarEstatusSolicitud = async (req, res) => {
     const { idSolicitud } = req.params;
-    const { nuevoEstatus, observaciones } = req.body;
+    const { nuevoEstatus, observaciones } = req.body; // <--- Aquí la recibimos del frontend
 
     try {
         const pool = await poolPromise;
         await pool.request()
             .input('idSolicitud', sql.BigInt, idSolicitud)
             .input('nuevoEstatus', sql.NVarChar, nuevoEstatus)
+            .input('observaciones', sql.NVarChar, observaciones || '') // <--- ¡ESTA ES LA LÍNEA QUE FALTABA!
             .query(solicitudesQueries.actualizarEstatusSolicitud);
 
-        res.json({ ok: true, message: `Solicitud movida a ${nuevoEstatus}` });
+        res.json({ ok: true, message: "Estatus actualizado correctamente" });
     } catch (error) {
-        res.status(500).json({ ok: false, error: error.message });
+        console.error("Error al actualizar estatus:", error.message);
+        res.status(500).json({ error: error.message });
     }
 };

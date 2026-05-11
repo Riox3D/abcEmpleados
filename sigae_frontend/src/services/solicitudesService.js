@@ -1,6 +1,6 @@
 import { api } from 'boot/axios' 
 
-export const solicitudesService = {
+export default {
   // 1. Guardar una nueva solicitud (RH)
   enviarAlta: async (datos) => {
     const claveUsrRegistro = 'ADM001' 
@@ -27,5 +27,14 @@ export const solicitudesService = {
   async actualizarEstatus(id, payload) {
     const response = await api.put(`/api/solicitudes/actualizar-estatus/${id}`, payload)
     return response.data
-  }
+  },
+  async getCatalogoEmpleados(){
+    const response = await api.get('/empleados/getCatalogoEmpleados')
+    return response.data
+  },
+  async getEmpleado(numEmpleado){
+    const response = await api.get('/empleados/getEmpleado/'+numEmpleado)
+    return response.data
+  },
 }
+

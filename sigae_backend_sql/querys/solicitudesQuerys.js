@@ -60,14 +60,19 @@ export const solicitudesQueries = {
         SELECT idRbac, nombreRbac FROM c_rbac WHERE estatus = 1
     `,
 
-    // 7. Actualizar el estatus del flujo (Mueve la solicitud entre TI, Gerencia y Proceso)
+    // 7. Actualizar el estatus del flujo 
     actualizarEstatusSolicitud: `
         UPDATE Solicitudes 
-        SET estatus = @nuevoEstatus
+        SET estatus = @nuevoEstatus,
+            observaciones = CASE 
+                                WHEN @observaciones IS NOT NULL AND @observaciones != '' 
+                                THEN @observaciones 
+                                ELSE observaciones 
+                            END
         WHERE idSolicitud = @idSolicitud
     `,
-
     // 8. Actividades reales de una solicitud 
+    // 8. Actividades reales de una solicitud (Sin alias innecesarios)
     getActividadesSolicitud: `
         SELECT sa.*, gd.descripcion as titulo
         FROM solicitud_actividades sa

@@ -56,21 +56,10 @@
             class="bg-blue-1 border-blue shadow-2 q-pa-md"
           >
             <div class="text-h6 text-blue-9 q-mb-sm row items-center">
-              <q-icon name="admin_panel_settings" class="q-mr-sm" /> Aprobación Gerencial y
-              Configuración RBAC
+              <q-icon name="admin_panel_settings" class="q-mr-sm" /> Aprobación Gerencial
             </div>
             <div class="row q-col-gutter-md q-mb-md">
-              <div class="col-12 col-md-6">
-                <q-select
-                  v-model="solicitud.rbac.edificios"
-                  :options="['Sede Principal', 'Planta 2', 'Almacén']"
-                  label="Accesos a Edificios"
-                  multiple
-                  use-chips
-                  outlined
-                  bg-color="white"
-                />
-              </div>
+
               <div class="col-12 col-md-6">
                 <q-input
                   v-model="observacionesGerente"
@@ -138,81 +127,58 @@
               </q-list>
             </q-card>
 
-            <q-card
-              v-if="solicitud.rbac && solicitud.rbac.edificios.length"
-              class="shadow-3 q-mt-md"
-              style="border-radius: 12px"
-            >
-              <q-card-section class="bg-indigo-1 text-indigo-9 text-weight-bold">
-                <q-icon name="layers" size="sm" class="q-mr-xs" /> Configuración RBAC asignada
-              </q-card-section>
-              <q-card-section>
-                <div class="text-caption text-grey-7">Edificios:</div>
-                <div class="row q-gutter-xs q-mb-sm">
-                  <q-chip
-                    v-for="ed in solicitud.rbac.edificios"
-                    :key="ed"
-                    size="sm"
-                    outline
-                    color="indigo"
-                    >{{ ed }}</q-chip
-                  >
-                </div>
-              </q-card-section>
-            </q-card>
+          
           </div>
 
           <div class="col-12 col-md-8">
-            <q-card class="shadow-3" style="border-radius: 12px">
-              <q-card-section class="bg-grey-2 row items-center justify-between">
-                <div class="text-subtitle1 text-weight-bold text-primary">
-                  <q-icon name="checklist" size="sm" class="q-mr-sm" /> Avance de Tareas
-                </div>
+              <q-card class="shadow-3" style="border-radius: 12px">
+                <q-card-section>
+                  <div class="text-h6 text-primary q-mb-md">Línea de Tiempo de Tareas</div>
+                  
+                  <q-banner v-if="solicitud.estatus === 'PendienteValidacionTI' || solicitud.estatus === 'ValidacionGerencial'" class="bg-blue-grey-1 text-blue-grey-9 q-mb-md rounded-borders">
+                    <template v-slot:avatar>
+                      <q-icon name="lock" size="md" color="blue-grey-7" />
+                    </template>
+                    <strong>Tareas en espera:</strong> Las actividades correspondientes a este perfil están bloqueadas temporalmente. Se mostrarán en esta sección una vez que TI y Gerencia aprueben la solicitud.
+                  </q-banner>
+
+                  <q-timeline v-if="solicitud.estatus === 'EnProceso' || solicitud.estatus === 'En proceso' || solicitud.estatus === 'En Proceso' || solicitud.estatus === 'Completada'" color="secondary">
+                    <q-timeline-entry
+            v-for="(paso, index) in pasos"
+            :key="index"
+            :title="paso.titulo"
+            :subtitle="paso.responsable"
+            :color="paso.estatusActividad === 'Completado' ? 'positive' : 'warning'"
+            :icon="paso.estatusActividad === 'Completado' ? 'check_circle' : 'pending_actions'"
+          >
+            <div class="q-pl-sm q-pb-md">
+              
+              <div v-if="paso.datoGenerado" class="text-caption text-grey-8 q-mb-sm">
+                <q-icon name="label" size="xs" class="q-mr-xs" />
+                <strong>Dato/Cuenta:</strong> {{ paso.datoGenerado }}
+              </div>
+
+              <div class="row">
                 <q-btn
-                  v-if="solicitud.estatus=== 'En Proceso'"
-                  label="Actualizar"
+                  v-if="(solicitud.estatus === 'EnProceso' || solicitud.estatus === 'En proceso' || solicitud.estatus === 'En Proceso') && paso.estatusActividad !== 'Completado'"
                   color="primary"
+                  outline
+                  no-caps
+                  rounded
+                  size="sm"
                   icon="edit"
-                  @click="mostrarDialogo = true"
+                  label="Registrar Avance"
+                  class="shadow-1"
+                  @click="abrirDialogoAvance(paso)"
                 />
-              </q-card-section>
-              <q-separator />
+              </div>
+            </div>
+          </q-timeline-entry>
+                  </q-timeline>
 
-              <q-card-section class="q-pa-lg">
-                <div
-                  v-if="solicitud.estatus?.includes('PendienteValidacion')"
-                  class="text-center q-pa-xl"
-                >
-                  <q-icon name="lock" size="lg" color="grey-4" />
-                  <div class="text-grey-6 q-mt-md">
-                    Las tareas se activarán una vez que la solicitud sea validada por TI y Gerencia.
-                  </div>
-                </div>
-
-                <q-timeline v-else color="secondary" layout="loose">
-                  <q-timeline-entry
-                    v-for="(paso, index) in pasos"
-                    :key="index"
-                    :title="paso.titulo"
-                    :color="paso.completado ? 'positive' : 'grey-5'"
-                    :icon="paso.esAutomatica ? 'auto_mode' : 'person'"
-                  >
-                    <div class="q-pa-sm bg-grey-2 rounded-borders">
-                      <div class="text-caption text-grey-8">
-                        Responsable: {{ paso.responsableNombre }}
-                      </div>
-                      <div
-                        v-if="paso.esAutomatica"
-                        class="text-caption text-blue-8 text-weight-bold italic"
-                      >
-                        Proceso Automático
-                      </div>
-                    </div>
-                  </q-timeline-entry>
-                </q-timeline>
-              </q-card-section>
-            </q-card>
-          </div>
+                </q-card-section>
+              </q-card>
+            </div>
         </div>
 
         <DialogRegistrarAvance
@@ -222,6 +188,11 @@
         />
       </div>
     </div>
+    <DialogRegistrarAvance 
+      v-model="showDialogAvance" 
+      :actividad="pasoSeleccionado" 
+      @guardado="alGuardarAvance" 
+    />
   </q-page>
 </template>
 
@@ -233,9 +204,24 @@ import { useQuasar } from 'quasar'
 import DialogRegistrarAvance from 'components/rh/DialogRegistrarAvance.vue'
 import { solicitudesService } from 'src/services/solicitudesService'
 
+const showDialogAvance = ref(false)
+const pasoSeleccionado = ref(null)
 const route = useRoute()
 const $q = useQuasar()
 //const {esResponsable } = useAuth()
+
+const abrirDialogoAvance = (paso) => {
+  pasoSeleccionado.value = paso
+  showDialogAvance.value = true
+}
+
+// Esta función la llamará el diálogo cuando termine de guardar, para refrescar la línea de tiempo
+const alGuardarAvance = async () => {
+  // Recargamos el seguimiento completo para ver el nuevo estatus de las tareas
+  const res = await solicitudesService.obtenerSeguimiento(solicitud.value.idSolicitud)
+  solicitud.value = res
+  pasos.value = res.pasos || []
+}
 
 const cargando = ref(true)
 const mostrarDialogo = ref(false)
@@ -247,7 +233,7 @@ const observacionesGerente = ref('')
 const colorEstatus = computed(() => {
   const s = solicitud.value.estatus
   if (s?.includes('TI')) return 'orange'
-  if (s?.includes('gerencial')) return 'blue'
+  if (s?.includes('Gerencial')) return 'blue'
   if (s === 'En proceso') return 'positive'
   return 'grey'
 })
@@ -278,11 +264,11 @@ async function validarSolicitud(tipo) {
   try {
     $q.loading.show({ message: 'Actualizando estatus...' })
     
-    let nuevoEstatus = (tipo === 'aprobado_ti') ? 'ValidacionGerencial' : 'En proceso'
+    let nuevoEstatus = (tipo === 'aprobado_ti') ? 'ValidacionGerencial' : 'EnProceso'
     let obs = (tipo === 'aprobado_ti') ? observacionesTI.value : observacionesGerente.value
 
     const res = await solicitudesService.actualizarEstatus(solicitud.value.idSolicitud, {
-      estatus: nuevoEstatus,
+      nuevoEstatus: nuevoEstatus,
       observaciones: obs,
       claveUsuario: 'ADM001' 
     })

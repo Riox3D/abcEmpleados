@@ -11,7 +11,10 @@ router.post('/guardar/:claveUsrRegistro/:claveEmpleado', /*authMiddleware, */pro
 router.get('/get-pendientes-ti', authMiddleware, proxyToSqlAuth); // TI ve qué hay por validar
 router.get('/seguimiento/:idSolicitud', /*authMiddleware, */proxyToSqlAuth); // Para ver el Timeline/Actividades
 router.put('/put-validar-solicitud', authMiddleware, proxyToSqlAuth); // Cuando TI o Gerente aprueban el global
-router.put('/put-actualizar-actividad', authMiddleware, proxyToSqlAuth); // Cuando el técnico termina una tarea
+router.put('/actualizar-estatus/:idSolicitud', (req, res) => {
+    // Reenviamos la petición al puerto 3002 manteniendo el idSolicitud
+    proxyToSqlAuth(req, res, `/api/solicitudes/actualizar-estatus/${req.params.idSolicitud}`);
+});
 router.get('/get-todas', /*authMiddleware,*/ proxyToSqlAuth);
 
 export default router;  

@@ -37,12 +37,11 @@ io.on('connection', (socket) => socketHandlers(socket, io))
 // Middleware y rutas
 app.use(express.json())
 app.use(cookieParser())
-app.use('/api/empleados', empleadosRoutes);
 app.use(cors({
   origin: config.FRONTEND_URL,
   credentials: true,
 }))
-
+app.use('/api/empleados', empleadosRoutes);
 app.use('/auth', authRoutes)
 app.use('/notify', notifyRoutes)
 app.use('/file', fileRoutes)

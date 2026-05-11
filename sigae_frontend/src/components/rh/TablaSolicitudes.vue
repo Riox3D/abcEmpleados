@@ -49,7 +49,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router' // Necesario para navegar
-import { solicitudesService } from 'src/services/solicitudesService'
+import solicitudesService from 'src/services/solicitudesService'
 import { useAuth } from 'src/composables/useAuth'
 import { watch } from 'vue'
 const { usuarioLogueado } = useAuth()
