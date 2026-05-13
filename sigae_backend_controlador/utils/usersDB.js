@@ -8,8 +8,9 @@ const BASE_URL = config.URL_SQL;
 //Esto es solo temporal, esto se tiene que buscar en BD
 export async function autenticarUsuario(payload) {
   try {
-   
-    const response = await axios.get(`${BASE_URL}/users/${payload.email}`);
+    console.log('autenticarUsuario URL: ',`${BASE_URL}/login/users/${payload.email}`)
+    const response = await axios.get(`${BASE_URL}/login/users/${payload.email}`);
+   console.log('autenticarUsuario response: ',response.data)
 
     const user = response.data;
   
@@ -41,8 +42,8 @@ export async function autenticarUsuario(payload) {
 
 export async function obtenerUsuarioPorId(id) {
   try {
-    const response = await axios.get(`${BASE_URL}/users/id/${id}`);
-    console.log('obtenerUsuarioPorId URL: ',`${BASE_URL}/users/id/${id}`)
+    const response = await axios.get(`${BASE_URL}/login/users/id/${id}`);
+    console.log('obtenerUsuarioPorId URL: ',`${BASE_URL}/login/users/id/${id}`)
     const user = response.data;
     console.log('obtenerUsuarioPorId: ',user)
     if (!user) return null;

@@ -14,4 +14,5 @@ router.get('/seguimiento/:idSolicitud', solicitudesController.getSeguimientoSoli
 // 4. CAMBIO DE ESTATUS (TI y Gerente)
 router.put('/actualizar-estatus/:idSolicitud', solicitudesController.actualizarEstatusSolicitud);
 
+router.put('/actualizar-avances', solicitudesController.putActualizarAvances);
 export default router;

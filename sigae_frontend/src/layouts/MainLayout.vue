@@ -1,70 +1,69 @@
-<template>
-  <q-layout view="hHh lpR fFf">
-    <q-header elevated class="bg-primary text-white" height-hint="98">
-      <q-toolbar>
-        <q-toolbar-title>
-          <q-avatar>
-            <img src="src/assets/cidesi_icon.png" />
-          </q-avatar>
-          abcEmpleados
-        </q-toolbar-title>
-         <!--
-         <div class="row items-center q-gutter-sm q-mr-md">
-          <div class="text-subtitle2 text-weight-bold">Vista actual:</div>
-          <q-select
-            v-model="rolSeleccionado"
-            :options="opcionesRoles"
-            dense
-            outlined
-            bg-color="white"
-            options-dense
-            emit-value
-            map-options
-            @update:model-value="cambiarRolActivo"
-            style="min-width: 230px"
-          >
-            <template v-slot:prepend>
-              <q-icon name="switch_account" color="primary" />
-            </template>
-          </q-select>
-        </div>-->
-      </q-toolbar>
+<!-- <script setup>
+import { ref } from 'vue'
+import AppHeader from 'components/header.vue'
+import AppDrawer from 'components/sidebar.vue'
+import AppFooter from 'components/footer.vue'
 
-      <q-tabs align="left">
-        <q-route-tab to="/" label="Pagina Principal" />
-      </q-tabs>
+const leftDrawerOpen = ref(false)
+</script>
+
+<template>
+  <q-layout view="lHh Lpr lFf">
+    <AppHeader @toggleDrawer="leftDrawerOpen = !leftDrawerOpen" />
+    <AppDrawer v-model="leftDrawerOpen" />
+    <q-page-container>
+      <router-view />
+    </q-page-container>
+    <AppFooter />
+  </q-layout>
+</template> -->
+
+
+<script setup>
+import { ref, computed } from 'vue'
+import AppHeader from 'components/header.vue'
+import AppDrawer from 'components/sidebar.vue'
+import { useAuthStore } from 'stores/authStore'
+
+const auth = useAuthStore()
+const isLoggedIn = computed(() => auth.isAuthenticated)
+const leftDrawerOpen = ref(false)
+
+</script>
+
+<template>
+  <q-layout view="hHh lpR fff">
+    <q-header class="bg-white">
+      <!-- Barra oficial -->
+      <iframe src="/barra.html" style="width: 100%; height: 70px; border: none; display: block;"></iframe>
+
+      <!-- AppHeader solo si hay sesión -->
+
+      <AppHeader @toggleDrawer="leftDrawerOpen = !leftDrawerOpen" />
+
     </q-header>
+    <AppDrawer v-model="leftDrawerOpen" />
+
 
     <q-page-container>
       <router-view />
     </q-page-container>
+    <!-- Footer -->
+    <q-footer class="q-pa-none">
+
+
+      <iframe src="/footer.html" style="
+      width: 100%;
+      height: 280px; /* solo lo que mide el pie */
+      border: none;
+      display: block;
+      position: relative;
+      top: 0px; /* recorta la barra de arriba */
+      overflow: hidden;
+    " scrolling="no" sandbox="allow-same-origin allow-scripts"></iframe>
+
+
+    </q-footer>
+
   </q-layout>
 </template>
-
-<script setup>
-/*import { ref } from 'vue'
-import { useAuth } from 'src/composables/useAuth'
-
-const { simularInicioSesion } = useAuth()
-
-const rolSeleccionado = ref('rh')
-
-const opcionesRoles = [
-  { label: 'Recursos Humanos', value: 'rh', nombre: 'Admin RH', clave: 'EMP-000' },
-  { label: 'Validador TI', value: 'validador_ti', nombre: 'Ing. Sistemas', clave: 'EMP-999' },
-  {
-    label: 'Gerente (Jefe Inmediato)',
-    value: 'gerente',
-    nombre: 'Roberto Gómez',
-    clave: 'EMP-555',
-  },
-  { label: 'Responsable de Tarea', value: 'responsable', nombre: 'Soporte TI', clave: 'EMP-888' },
-]
-
-function cambiarRolActivo(nuevoRol) {
-  const datosRol = opcionesRoles.find((r) => r.value === nuevoRol)
-  if (datosRol) {
-    simularInicioSesion(datosRol.value, datosRol.nombre, datosRol.clave)
-  }
-} */
-</script>

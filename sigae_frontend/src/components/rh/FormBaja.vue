@@ -1,55 +1,38 @@
 <template>
-  <div>
-    <div class="row items-center q-gutter-sm q-mb-lg text-negative">
-      <q-icon name="person_remove" size="md" />
-      <div class="text-h6 text-weight-bold">Formulario de Baja de Personal</div>
+  <div class="q-pa-md">
+    <div class="row items-center q-mb-lg border-b-negative">
+      <q-avatar icon="person_remove" color="negative" text-color="white" size="lg" shadow-2 />
+      <div class="q-ml-md">
+        <div class="text-h5 text-weight-bolder text-negative">Formulario de Baja de Personal</div>
+        <div class="text-caption text-grey-7">Proceso de revocación de accesos y recuperación de activos</div>
+      </div>
     </div>
 
     <div class="row q-col-gutter-lg">
       <div class="col-12">
-        <q-card flat bordered class="bg-grey-1" style="border-radius: 8px">
-          <q-card-section class="q-pa-md">
-            <div class="text-subtitle2 text-grey-8 q-mb-sm">1. Localiza al empleado</div>
+        <q-card class="shadow-2" style="border-radius: 12px; border-left: 5px solid #1976D2">
+          <q-card-section>
             
             <q-select
-              v-model="empleado"
+              v-model="empleadoSeleccionado"
               use-input
-              hide-selected
-              fill-input
-              input-debounce="300"
+              input-debounce="100"
               :options="opcionesEmpleados"
+              @update:model-value="actualizarEmpleado"
               @filter="filtrarEmpleados"
-              option-label="nombre"
-              label="Ingresa ID o Nombre completo"
+              option-label="nombreEmpleado"
+              option-value="claveEmpleado"
+              label="1. Busca al empleado (Clave de Empleado o Nombre)"
               outlined
-              bg-color="white"
-              dense
-              class="full-width"
+              clearable
+              bg-color="blue-1"
             >
               <template v-slot:prepend>
                 <q-icon name="search" color="primary" />
               </template>
-              
               <template v-slot:no-option>
                 <q-item>
-                  <q-item-section class="text-grey">
-                    No se encontraron empleados con esa búsqueda
-                  </q-item-section>
-                </q-item>
-              </template>
-
-              <template v-slot:option="scope">
-                <q-item v-bind="scope.itemProps">
-                  <q-item-section avatar>
-                    <q-avatar color="primary" text-color="white" icon="person" size="sm" />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>{{ scope.opt.nombre }}</q-item-label>
-                    <q-item-label caption class="text-primary text-weight-bold">{{ scope.opt.id }}</q-item-label>
-                  </q-item-section>
-                  <q-item-section side>
-                    <q-item-label caption>{{ scope.opt.area }}</q-item-label>
-                  </q-item-section>
+                  <q-item-section class="text-grey">No se encontraron resultados</q-item-section>
                 </q-item>
               </template>
             </q-select>
@@ -58,128 +41,279 @@
         </q-card>
       </div>
 
-      <transition name="q-transition--fade">
-        <div class="col-12 row q-col-gutter-md items-center" v-if="empleado && empleado.id">
-          <div class="col-12 col-sm-7">
-            <q-item class="bg-white shadow-1 rounded-borders q-pa-md" style="border: 1px solid #e0e0e0">
-              <q-item-section avatar>
-                <q-avatar size="60px" color="negative" text-color="white" icon="person" class="shadow-2" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label caption class="text-weight-bold text-negative">EMPLEADO A DAR DE BAJA</q-item-label>
-                <q-item-label class="text-h6 text-weight-bold text-dark">{{ empleado.nombre }}</q-item-label>
-                <q-item-label caption class="text-grey-7">ID: {{ empleado.id }} | Área: {{ empleado.area }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-btn round flat icon="close" color="grey-6" dense @click="limpiarBusqueda" />
-              </q-item-section>
-            </q-item>
+      <transition
+        appear
+        enter-active-class="animated fadeIn"
+        leave-active-class="animated fadeOut"
+      >
+        <div class="col-12 row q-col-gutter-lg" v-if="form.claveEmpleado">
+          
+          <div class="col-12 col-md-5">
+            <q-card class="shadow-2 full-height" style="border-radius: 12px">
+              <q-card-section class="bg-grey-2">
+                <div class="text-subtitle2 text-weight-bold text-primary">
+                  <q-icon name="badge" class="q-mr-xs"/> Información del Perfil
+                </div>
+              </q-card-section>
+              <q-separator />
+              <q-card-section class="q-gutter-y-sm">
+                <div class="row justify-between border-b q-py-xs">
+                  <span class="text-grey-7">Nombre Completo:</span>
+                  <span class="text-weight-medium">{{ form.nombreEmpleado }}</span>
+                </div>
+                <div class="row justify-between border-b q-py-xs">
+                  <span class="text-grey-7">Clave Empleado:</span>
+                  <span class="text-weight-medium text-uppercase">{{ form.claveEmpleado }}</span>
+                </div>
+                <div class="row justify-between border-b q-py-xs">
+                  <span class="text-grey-7">CURP:</span>
+                  <span class="text-weight-medium text-uppercase">{{ form.curpEmpleado }}</span>
+                </div>
+                <div class="row justify-between border-b q-py-xs">
+                  <span class="text-grey-7">Gerencia/Área:</span>
+                  <span class="text-weight-medium">{{ form.gerencia || 'No especificada' }}</span>
+                </div>
+                <div class="row justify-between q-py-xs">
+                  <span class="text-grey-7">Correo Empleado:</span>
+                  <span class="text-weight-medium">{{ form.correoEmpleado || 'No especificada' }}</span>
+                </div>
+              </q-card-section>
+            </q-card>
           </div>
 
-          <div class="col-12 col-sm-5">
-            <q-input v-model="fechaBaja" type="date" label="Fecha efectiva de baja" outlined bg-color="white" stack-label>
-              <template v-slot:prepend>
-                <q-icon name="event_busy" color="negative" />
-              </template>
-            </q-input>
+          <div class="col-12 col-md-7">
+            <q-card class="shadow-2" style="border-radius: 12px">
+              <q-card-section class="bg-grey-2">
+                <div class="text-subtitle2 text-weight-bold text-negative">
+                  <q-icon name="settings" class="q-mr-xs"/> 2. Configuración de Tareas de Baja
+                </div>
+              </q-card-section>
+              <q-separator />
+              
+              <q-card-section class="q-pa-md">
+                <div class="row q-col-gutter-md">
+                  <div class="col-12">
+                    <q-select
+                      v-model="form.idRbac"
+                      :options="opcionesRbac"
+                      option-label="nombreRbac"
+                      option-value="idRbac"
+                      emit-value
+                      map-options
+                      label="Perfil de Accesos a Revocar *"
+                      outlined
+                      hint="Selecciona el perfil que tenía asignado para generar la lista de cierre."
+                    >
+                      <template v-slot:prepend>
+                        <q-icon name="admin_panel_settings" color="negative" />
+                      </template>
+                    </q-select>
+                  </div>
+                  
+                  <div class="col-12">
+                    <q-input
+                      v-model="form.observaciones"
+                      label="Motivos o Comentarios de la Baja (Opcional)"
+                      type="textarea"
+                      outlined
+                      placeholder="Escribe aquí detalles adicionales relevantes para TI..."
+                      rows="3"
+                    />
+                  </div>
+                </div>
+              </q-card-section>
+
+              <q-separator />
+
+              <q-card-actions align="right" class="q-pa-md bg-grey-1">
+                <q-btn
+                  label="Procesar Baja Definitiva"
+                  icon="delete_forever"
+                  color="negative"
+                  unelevated
+                  class="q-px-xl text-weight-bold"
+                  style="border-radius: 8px"
+                  :disable="!form.claveEmpleado || !form.idRbac"
+                  :loading="cargando"
+                  @click="submit"
+                />
+              </q-card-actions>
+            </q-card>
           </div>
 
-          <div class="col-12 q-mt-md">
-            <q-input v-model="observaciones" label="Motivo o comentarios de la baja" type="textarea" outlined
-              bg-color="white" rows="3" hint="Indica el motivo de la salida (renuncia, término de contrato, etc.)" />
-          </div>
-        </div>
-
-        <div v-else class="col-12 text-center q-py-xl text-grey-5 bg-grey-1 rounded-borders q-mt-md"
-          style="border: 2px dashed #ccc">
-          <q-icon name="find_in_page" size="4rem" class="q-mb-sm" />
-          <div class="text-h6">Esperando búsqueda</div>
-          <div>Utiliza el buscador para seleccionar al empleado que saldrá de la empresa</div>
         </div>
       </transition>
-    </div>
-
-    <q-separator class="q-mt-xl q-mb-md" />
-    <div class="row justify-end q-gutter-sm">
-      <q-btn label="Procesar Baja Definitiva" icon="delete_forever" color="negative" unelevated
-        class="q-px-lg text-weight-bold" :disable="!empleado || !empleado.id || !fechaBaja" @click="submit" />
     </div>
   </div>
 </template>
 
+<style scoped>
+.border-b-negative {
+  border-bottom: 2px solid #c10015;
+  padding-bottom: 15px;
+}
+.border-b {
+  border-bottom: 1px solid #e0e0e0;
+}
+.full-height {
+  height: 100%;
+}
+</style>
+
 <script setup>
-import { ref } from 'vue'
-import { api } from 'boot/axios' 
-import { empleadosService } from 'src/services/empleadosService'
-import { useQuasar } from 'quasar';
+import { ref, onMounted } from 'vue' // Añadimos watch para detectar la sel ección
+//import { empleadosService } from 'src/services/empleadosService' // Importamos el buscador
+import { useQuasar } from 'quasar'
+import { api } from 'boot/axios'
+import solicitudesService from 'src/services/solicitudesService';
 
+const opcionesRbac = ref([])
+const $q = useQuasar()
+const cargando = ref(false)
 const emit = defineEmits(['submit'])
-
-const empleado = ref(null)
+const empleados = ref([])
+const empleadoSeleccionado = ref(null)
 const opcionesEmpleados = ref([])
-const fechaBaja = ref('')
-const observaciones = ref('')
 
-async function filtrarEmpleados(val, update, abort) {
-  if (val.length < 2) {
-    abort()
+const form = ref({
+  idTipoMovimiento: 2, 
+  claveEmpleado: '',
+  nombreEmpleado: '',
+  curpEmpleado: '',
+  correoEmpleado: '',
+  sede: '',
+  direccion: '',
+  gerencia: '',
+  issste: '',
+  claveJefe: '',
+  jefeInmediato: '',
+  // -------------------------------------------
+  idRbac: null, 
+  observaciones: ''
+})
+
+// 2. Lógica para buscar en "Human"
+async function filtrarEmpleados(val, update) {
+ 
+  if (val === "") {
+        update(() => {
+          opcionesEmpleados.value = [...empleados.value];
+
+          // here you have access to "ref" which
+          // is the Vue reference of the QSelect
+        });
+        return;
+      }
+
+      update(() => {
+        const needle = val.toUpperCase();
+        opcionesEmpleados.value = empleados.value.filter((v) =>
+          v.nombreEmpleado.toUpperCase().includes(needle)
+        );
+      });
+}
+
+async function actualizarEmpleado(empleado) {
+  // Si el usuario borra la selección en el buscador, limpiamos todo
+  if (!empleado) {
+    form.value.claveEmpleado = ''
+    form.value.nombreEmpleado = ''
+    form.value.curpEmpleado = ''
+    form.value.gerencia = ''
+    form.value.jefeInmediato = ''
+    form.value.sede = ''
+    form.value.issste = ''
+    form.value.correoEmpleado= ''
+    form.value.observaciones = ''
+    // Puedes limpiar los demás si lo deseas
     return
   }
-  const resultados = await empleadosService.buscar(val)
-  update(() => {
-    opcionesEmpleados.value = resultados
-  })
-}
 
-function limpiarBusqueda() {
-  empleado.value = null
-  fechaBaja.value = ''
-  observaciones.value = ''
-}
-const $q = useQuasar()
-async function submit() {
-  $q.dialog({
-    title: 'Confirmar Baja Definitiva',
-    message: `¿Estás seguro de que deseas procesar la baja de ${empleado.value.nombre}? Esta acción quedará registrada en el historial.`,
-    cancel: {
-      label: 'Cancelar',
-      color: 'grey',
-      flat: true
-    },
-    ok: {
-      label: 'Sí, Procesar',
-      color: 'negative', 
-      unelevated: true
-    },
-    persistent: true // Obliga a elegir una opción
-  }).onOk(async () => {
-    
-    try {
-      const url = `api/solicitudes/guardar/10/${empleado.value.id}`
+  console.log("Empleado seleccionado:", empleado)
+  try {
+    // Activamos un pequeño indicador de carga si lo deseas (opcional)
+    $q.loading.show({ message: 'Obteniendo datos de Human...' })
+       // const response = await solicitudesService.getEmpleado(empleado.claveEmpleado)
+    const response = await api.get('/api/empleados/getEmpleado/' + empleado.claveEmpleado)
+    console.log("Empleado elegido completo:", response)
 
-      const respuesta = await api.post(url, {
-        idTipoMovimiento: 2, // Baja
-        fechaEfectiva: fechaBaja.value,
-        nombreEmpleado: empleado.value.nombre, 
-        curpEmpleado: empleado.value.curp,
-        observaciones: observaciones.value
-      })
+    // Extraemos el primer (y único) arreglo de empleado de la respuesta
+    const datosDb = response.data?.empleados?.[0]
 
-      if (respuesta.status === 200 || respuesta.data.success) {
-        $q.notify({
-          color: 'positive',
-          message: 'Baja registrada correctamente',
-          icon: 'check'
-        })
-        emit('submit', { ok: true })
-      }
-    } catch (error) {
-      console.error("Error al procesar la baja:", error)
-      $q.notify({
-        color: 'negative',
-        message: 'No se pudo registrar la baja en el servidor'
-      })
+    if (datosDb) {
+      // Asignamos usando los índices de tu consola y .trim() para quitar espacios vacíos
+      form.value.claveEmpleado = datosDb[0]?.trim() || ''
+      form.value.nombreEmpleado = datosDb[1]?.trim() || ''
+      form.value.correoEmpleado = datosDb[2]?.trim() || ''
+      form.value.sede = datosDb[4]?.trim() || ''
+      form.value.direccion = datosDb[6]?.trim() || ''
+      form.value.gerencia = datosDb[8]?.trim() || ''
+      form.value.curpEmpleado = datosDb[9]?.trim() || ''
+      form.value.issste = datosDb[10]?.trim() || ''
+      form.value.claveJefe = datosDb[13]?.trim() || ''
+      form.value.jefeInmediato = datosDb[14]?.trim() || ''
     }
-  })
+
+  } catch (error) {
+    console.error("Error al cargar empleado:", error)
+    $q.notify({ color: 'negative', message: 'Error al conectar con Human' })
+  } finally {
+    $q.loading.hide()
+  }
+}
+
+
+/*watch(empleadoSeleccionado, (nuevoEmpleado) => {
+  console.log('Datos del empleado recibido:', nuevoEmpleado)
+  if (nuevoEmpleado) {
+    form.value.claveEmpleado = nuevoEmpleado.id
+    form.value.nombreEmpleado = nuevoEmpleado.nombre
+    form.value.curpEmpleado = nuevoEmpleado.curp || '' 
+  } else {
+    // Si borra la selección, limpiamos los campos
+    form.value.claveEmpleado = ''
+    form.value.nombreEmpleado = ''
+    form.value.curpEmpleado = ''
+  }
+})*/
+onMounted(async () => {
+  try {
+    const response = await api.get('/api/catalogos/rbac')
+    opcionesRbac.value = response.data
+  } catch (error) {
+    console.error("Error al cargar RBAC:", error)
+  }
+  try {
+    const response = await api.get('/api/empleados/getCatalogoEmpleados')
+    empleados.value = response.data.empleados.map((empleado) => ({ 
+      claveEmpleado: empleado[0],
+      nombreEmpleado: empleado[1],
+    }))  
+    opcionesEmpleados.value = empleados.value
+    console.log(opcionesEmpleados.value)
+  } catch (error) {
+    console.error("Error al cargar RBAC:", error)
+  }
+}
+)
+async function submit() {
+  if (!form.value.claveEmpleado) {
+    $q.notify({ color: 'warning', message: 'Primero selecciona un empleado de Human' })
+    return
+  }
+
+  try {
+    cargando.value = true
+    const res = await solicitudesService.enviarAlta(form.value)
+    if (res.ok) {
+      $q.notify({ color: 'positive', message: 'Registro exitoso. Folio: ' + res.idSolicitud })
+      emit('submit', res) 
+    }
+  } catch (err) {
+    console.error('Error capturado:', err)
+    $q.notify({ color: 'negative', message: 'Error al conectar con el servidor' })
+  } finally {
+    cargando.value = false
+  }
 }
 </script>

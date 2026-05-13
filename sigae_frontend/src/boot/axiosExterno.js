@@ -1,7 +1,7 @@
 import { Cookies } from 'quasar'
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
-const url = import.meta.env.VITE_BACKEND
+const url = import.meta.env.VITE_BACKENDEXTERNO
 const api = axios.create({
   baseURL: url,
   withCredentials: true, // muy importante si el token está en cookies httpOnly

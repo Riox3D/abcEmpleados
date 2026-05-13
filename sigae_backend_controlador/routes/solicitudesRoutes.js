@@ -16,5 +16,6 @@ router.put('/actualizar-estatus/:idSolicitud', (req, res) => {
     proxyToSqlAuth(req, res, `/api/solicitudes/actualizar-estatus/${req.params.idSolicitud}`);
 });
 router.get('/get-todas', /*authMiddleware,*/ proxyToSqlAuth);
+router.put('/actualizar-avances', /*authMiddleware*/proxyToSqlAuth);
 
 export default router;  

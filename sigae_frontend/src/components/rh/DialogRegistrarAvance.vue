@@ -3,7 +3,7 @@
     <q-card style="min-width: 650px; border-radius: 12px" class="shadow-4">
       <q-card-section class="bg-primary text-white row items-center q-pa-md">
         <q-icon name="playlist_add_check" size="md" class="q-mr-sm" />
-        <div class="text-h6 text-weight-bold">Registrar Avances de Solicitud</div>
+        <div class="text-h6 text-weight-bold">Registrar Avances del Grupo</div>
         <q-space />
         <q-btn icon="close" flat round dense v-close-popup color="white" />
       </q-card-section>
@@ -16,10 +16,17 @@
           :key="index"
           class="q-mb-lg bg-grey-1 q-pa-md rounded-borders"
         >
+          
           <div class="row items-center justify-between q-mb-md">
-            <div class="text-subtitle1 text-weight-bold text-primary">
-              <q-icon name="task_alt" size="sm" class="q-mr-xs" /> {{ avance.titulo }}
+            <div>
+              <div class="text-subtitle1 text-weight-bold text-primary">
+                <q-icon name="task_alt" size="sm" class="q-mr-xs" /> {{ avance.titulo }}
+              </div>
+              <div class="text-caption text-grey-7 q-ml-md q-mt-xs">
+                <q-icon name="person" size="xs" /> Agente: <strong>{{ avance.agente }}</strong>
+              </div>
             </div>
+            
             <q-checkbox
               v-model="avance.completado"
               label="Marcar como completado"
@@ -28,70 +35,38 @@
             />
           </div>
 
-          <div class="row q-col-gutter-md">
-            <div class="col-12 col-sm-6">
-              <q-select
-                v-model="avance.responsableId"
-                :options="agentes"
-                option-label="nombre"
-                option-value="id"
-                label="Responsable asignado"
-                outlined
-                emit-value
-                map-options
-                disable
-                filled
-              >
-                <template v-slot:prepend><q-icon name="engineering" /></template>
-              </q-select>
-            </div>
-
-            <div class="col-12 col-sm-6">
+          <div class="row q-col-gutter-sm">
+            <div class="col-12 col-md-6">
               <q-input
                 v-model="avance.dato"
-                :label="avance.labelDato"
+                label="Dato Generado / Cuenta (Opcional)"
+                placeholder="Ej. Num. Serie, Correo, etc."
                 outlined
-                bg-color="white"
-                :disable="!avance.completado"
-              >
-                <template v-slot:prepend><q-icon name="info" /></template>
-              </q-input>
+                dense
+              />
             </div>
-
-            <div class="col-12">
+            <div class="col-12 col-md-6">
               <q-input
                 v-model="avance.comentario"
-                type="textarea"
-                label="Comentarios u observaciones"
+                label="Observaciones (Opcional)"
                 outlined
-                bg-color="white"
-                rows="2"
-                autogrow
-              >
-                <template v-slot:prepend><q-icon name="chat" /></template>
-              </q-input>
+                dense
+              />
             </div>
           </div>
+          
         </div>
       </q-card-section>
 
       <q-separator />
 
       <q-card-actions align="right" class="q-pa-md bg-grey-2">
-        <q-btn flat label="Cancelar" color="grey-8" class="text-weight-bold" v-close-popup />
-        <q-btn
-          color="primary"
-          icon="save"
-          label="Guardar Avances"
-          unelevated
-          class="q-px-md text-weight-bold"
-          @click="guardar"
-        />
+        <q-btn flat label="Cancelar" color="negative" v-close-popup />
+        <q-btn label="Guardar Avances" color="primary" @click="guardar" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
-
 <script setup>
 import { ref, computed, watch } from 'vue'
 
@@ -110,30 +85,22 @@ const dialogModel = computed({
   set: (val) => emit('update:modelValue', val),
 })
 
-const agentes = ref([
-  { id: 1, nombre: 'Juan Pérez', tipo: 'alta' },
-  { id: 2, nombre: 'María López', tipo: 'alta' },
-  { id: 3, nombre: 'Carlos Díaz', tipo: 'baja' },
-  { id: 4, nombre: 'Admin', tipo: 'sistema' },
-  { id: 5, nombre: 'Soporte', tipo: 'sistema' },
-])
+
 
 const formAvances = ref([])
 
+// Dentro del watch en DialogRegistrarAvance.vue
 watch(
   () => props.modelValue,
   (isOpen) => {
-    if (isOpen) {
+    if (isOpen && props.pasosActuales) {
       formAvances.value = props.pasosActuales.map((paso) => {
-        const agenteEncontrado = agentes.value.find((a) => a.nombre === paso.responsableNombre)
-
         return {
-          titulo: paso.titulo,
-          labelDato: `Información requerida`,
-          completado: paso.completado || false,
-          responsableId: agenteEncontrado ? agenteEncontrado.id : null,
-          responsableNombre: paso.responsableNombre || '',
-          dato: paso.dato || '',
+          idsolicitudActividad: paso.idsolicitudActividad,
+          titulo: paso.descripcionDetalle,
+          agente: paso.nombreResponsable || 'Sin asignar', // <-- Agregamos el agente
+          completado: paso.estatusActividad === 'Completado',
+          dato: paso.datoGenerado || '',
           comentario: paso.comentario || '',
         }
       })
@@ -143,16 +110,16 @@ watch(
 
 function guardar() {
   const avancesProcesados = formAvances.value.map((av) => {
-    const agente = agentes.value.find((a) => a.id === av.responsableId)
     return {
-      titulo: av.titulo,
-      completado: av.completado,
-      responsableNombre: agente ? agente.nombre : av.responsableNombre,
-      dato: av.dato,
-      comentario: av.comentario,
+      idsolicitudActividad: av.idsolicitudActividad,
+      estatusActividad: av.completado ? 'Completado' : 'EnProceso', // Traduce de vuelta el checkbox a texto
+      datoGenerado: av.dato,
+      observaciones: av.comentario
     }
   })
 
+  // Emitimos el evento que escuchará SeguimientoSolicitud.vue
   emit('guardar', avancesProcesados)
+  dialogModel.value = false
 }
 </script>

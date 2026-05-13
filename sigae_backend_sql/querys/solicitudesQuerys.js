@@ -1,16 +1,45 @@
 export const solicitudesQueries = {
     // 1. Insertar la solicitud inicial (RH)
-    insertarSolicitud: `
-        INSERT INTO Solicitudes (
-            fechaRegistro, claveUsrRegistro, idTipoMovimiento, claveEmpleado, 
-            nombreEmpleado, curpEmpleado, idRbac, observaciones, estatus
-        )
-        VALUES (
-            GETDATE(), @claveUsrRegistro, @idTipoMovimiento, @claveEmpleado, 
-            @nombreEmpleado, @curpEmpleado, @idRbac, @observaciones, 'PendienteValidacionTI' 
-        );
-        SELECT SCOPE_IDENTITY() AS idSolicitud;
-    `,
+    // 1. Insertar la solicitud inicial (RH) con los datos de Human
+insertarSolicitud: `
+INSERT INTO Solicitudes (
+    fechaRegistro, 
+    claveUsrRegistro, 
+    idTipoMovimiento, 
+    claveEmpleado, 
+    nombreEmpleado, 
+    curpEmpleado, 
+    correoEmpleado,
+    sede,
+    direccion,
+    gerencia,
+    issste,
+    claveJefe,
+    jefeInmediato,
+    idRbac, 
+    observaciones, 
+    estatus
+)
+VALUES (
+    GETDATE(), 
+    @claveUsrRegistro, 
+    @idTipoMovimiento, 
+    @claveEmpleado, 
+    @nombreEmpleado, 
+    @curpEmpleado, 
+    @correoEmpleado,
+    @sede,
+    @direccion,
+    @gerencia,
+    @issste,
+    @claveJefe,
+    @jefeInmediato,
+    @idRbac, 
+    @observaciones, 
+    'PendienteValidacionTI' 
+);
+SELECT SCOPE_IDENTITY() AS idSolicitud;
+`,
 
     // 2. Obtener configuración de actividades según el RBAC seleccionado
     getActividadesPorRbac: `
@@ -70,13 +99,31 @@ export const solicitudesQueries = {
                                 ELSE observaciones 
                             END
         WHERE idSolicitud = @idSolicitud
+
     `,
+    // Actualizar el avance de UNA sola actividad
+actualizarAvanceActividad: `
+UPDATE solicitud_actividades 
+SET 
+    estatusActividad = @estatusActividad,
+    datoGenerado = @datoGenerado,
+    observaciones = @observaciones
+WHERE 
+    idsolicitudActividad = @idsolicitudActividad 
+    AND idSolicitud = @idSolicitud;
+`,
     // 8. Actividades reales de una solicitud 
-    // 8. Actividades reales de una solicitud (Sin alias innecesarios)
-    getActividadesSolicitud: `
-        SELECT sa.*, gd.descripcion as titulo
-        FROM solicitud_actividades sa
-        INNER JOIN c_grupos_detalle gd ON sa.idGrupoDetalle = gd.idGrupoDetalle
-        WHERE sa.idSolicitud = @idSolicitud
-    `
+   // En solicitudesQuerys.js
+getActividadesSolicitud: `
+SELECT 
+    sa.*, 
+    g.descripcionGrupo AS descripcionGrupo, 
+    gd.descripcion AS descripcionDetalle,
+    ra.nombreEmpleado AS nombreResponsable
+FROM solicitud_actividades sa
+INNER JOIN c_grupos_detalle gd ON sa.idGrupoDetalle = gd.idGrupoDetalle
+INNER JOIN c_grupos g ON sa.idGrupo = g.idGrupo
+LEFT JOIN c_responsables_actividad ra ON gd.idResponsable = ra.idResponsable
+WHERE sa.idSolicitud = @idSolicitud
+`
 };

@@ -3,6 +3,7 @@ import { querys } from '../querys/querys.js';
 
 const getUsers = async (req, res) => {
   try {
+    console.log('prueba')
     let { correo } = req.params;
     const claveExtraida = correo.split('@')[0];
 
@@ -55,7 +56,7 @@ const getUsers = async (req, res) => {
           email: correo,
           name: "Cristian Cortes", 
           claveEmpleado: userFromSQL.claveEmpleado,
-          rol: rolFromSQL, // Cambiado de role a rol
+          role: rolFromSQL, // Cambiado de role a rol
           source: "SQL-Server-OK"
         }
       : {
@@ -63,7 +64,7 @@ const getUsers = async (req, res) => {
           email: correo,
           name: genericUser.nombre,
           claveEmpleado: genericUser.claveEmpleado,
-          rol: genericUser.rol, // Cambiado de role a rol
+          role: genericUser.rol, // Cambiado de role a rol
           source: "Modo-Desarrollador"
         };
 
@@ -74,39 +75,27 @@ const getUsers = async (req, res) => {
   }
 };
 
-const getUserCheck = async (req, res) => {
+
+
+const getUserMe = async (req, res) => {
   try {
-    const { id } = req.params;
-    let userSQL = null;
-    let rolSQL = "user";
+    console.log('prueba',req.params)
+    const{id}=req.params;
+    if(id){
+      res.json({
+        id: 0,
+        email: 'josec.chavez@cidesi.edu.mx',
+        name: 'Usuario Genérico',
+        claveEmpleado: '999999',
+        role: 'user',
+        source: 'Modo-Desarrollador'
 
-    try {
-      const pool = await poolPromise;
-      const userResult = await pool.request()
-        .input('idUsuario', sql.Int, id)
-        .query(querys.getUserByID);
+    })
+  }
 
-      if (userResult.recordset.length > 0) {
-        userSQL = userResult.recordset[0];
-        const roleResult = await pool.request()
-          .input('claveEmpleado', sql.NVarChar, userSQL.claveEmpleado)
-          .query(querys.selectRol);
-        
-        rolSQL = roleResult.recordset[0]?.rol || "user";
-      }
-    } catch (sqlErr) {
-      console.log("❗ Error en Check SQL");
-    }
-
-    return res.json(userSQL ? {
-      id: userSQL.idUsuario,
-      claveEmpleado: userSQL.claveEmpleado,
-      rol: rolSQL // Cambiado de role a rol
-    } : { id: 0, rol: "user" }); // Cambiado
-
-  } catch (err) {
-    return res.json({ id: 0, rol: "user" }); // Cambiado
+  } catch (error) {
+    
   }
 };
 
-export { getUsers, getUserCheck };
+export { getUsers, getUserMe };

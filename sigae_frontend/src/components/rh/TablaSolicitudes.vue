@@ -97,7 +97,7 @@ const getColorEstatus = (estatus) => {
   const colores = {
     'PendienteValidacionTI': 'orange',
     'ValidacionGerencial': 'blue',
-    'En proceso': 'positive',
+    'EnProceso': 'positive',
     'Finalizada': 'grey-8',
     'Rechazada': 'negative'
   }

@@ -28,6 +28,10 @@ export default {
     const response = await api.put(`/api/solicitudes/actualizar-estatus/${id}`, payload)
     return response.data
   },
+  async actualizarAvancesActividades(payload) {
+    const response = await api.put('/api/solicitudes/actualizar-avances', payload)
+    return response.data
+  },
   async getCatalogoEmpleados(){
     const response = await api.get('/empleados/getCatalogoEmpleados')
     return response.data

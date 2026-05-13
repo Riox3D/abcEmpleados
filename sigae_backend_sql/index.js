@@ -15,7 +15,7 @@ const port = process.env.PORT || 3002;
 app.use(express.json());
 
 
-app.use('/users', userRoutes);
+app.use('/login', userRoutes);
 
 app.use('/solicitudes', solicitudesRoutes);
 

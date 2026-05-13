@@ -56,6 +56,7 @@ export const login = async (req, res) => {
 // const config = require('../../config'); // Si lo tienes, asegúrate de que config.JWT_SECRET apunte a process.env.JWT_SECRET
 
 export const loginAD = async (req, res) => {
+ 
   // Validación de datos requeridos
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -81,20 +82,21 @@ export const loginAD = async (req, res) => {
 
   try {
     // Paso 1: Autenticación LDAP
-    const userLDAP = await authenticate(options);
+   /*  const userLDAP = await authenticate(options);
 
-
+ */
     // Después de obtener el correo ir a buscar al usuario
     
 
     const payload = {
-      email: userLDAP.mail
+      email: 'josec.chavez@cidesi.edu.mx'
     };
+    console.log('payload: ',payload)
     const user = await autenticarUsuario(payload);
 
     if (!user) {
       return res.status(401).json({ message: 'El Active Directory no tiene tu correo almacenado. Inicia sesión con Google.' });
-    }
+    } 
    
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role, numEmp: user.numEmp }, config.JWT_SECRET, { expiresIn: '8h' });
     await res.cookie('tokenjson', token, {
@@ -149,9 +151,9 @@ export const loginAD = async (req, res) => {
 
 export const me = async (req, res) => {
   try {
-
+console.log('me: ',req.user)
     const user = await obtenerUsuarioPorId(req.user.id); // <-- el ID viene del token JWT decodificado
-    console.log('me: ',user)
+    
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }

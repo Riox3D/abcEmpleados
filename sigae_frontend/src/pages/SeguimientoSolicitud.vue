@@ -119,11 +119,10 @@
                 <q-item>
                   <q-item-section>
                     <q-item-label caption>NSS / ISSSTE</q-item-label>
-                    <q-item-label>{{ solicitud.nssIssste }}</q-item-label>
+                    <q-item-label>{{ solicitud.issste }}</q-item-label>
                   </q-item-section>
                 </q-item>
-                
-  
+
               </q-list>
             </q-card>
 
@@ -144,55 +143,62 @@
 
                   <q-timeline v-if="solicitud.estatus === 'EnProceso' || solicitud.estatus === 'En proceso' || solicitud.estatus === 'En Proceso' || solicitud.estatus === 'Completada'" color="secondary">
                     <q-timeline-entry
-            v-for="(paso, index) in pasos"
-            :key="index"
-            :title="paso.titulo"
-            :subtitle="paso.responsable"
-            :color="paso.estatusActividad === 'Completado' ? 'positive' : 'warning'"
-            :icon="paso.estatusActividad === 'Completado' ? 'check_circle' : 'pending_actions'"
-          >
-            <div class="q-pl-sm q-pb-md">
-              
-              <div v-if="paso.datoGenerado" class="text-caption text-grey-8 q-mb-sm">
-                <q-icon name="label" size="xs" class="q-mr-xs" />
-                <strong>Dato/Cuenta:</strong> {{ paso.datoGenerado }}
-              </div>
+                      v-for="grupo in pasosAgrupados"
+                      :key="grupo.idGrupo"
+                      :color="grupo.tareas.every(t => t.estatusActividad === 'Completado') ? 'positive' : 'warning'"
+                      :icon="grupo.tareas.every(t => t.estatusActividad === 'Completado') ? 'check_circle' : 'pending_actions'"
+                    >
+                      <template v-slot:title>
+                        <div class="text-h6 text-weight-bold text-primary q-mb-xs">{{ grupo.descripcionGrupo }}</div>
+                      </template>
 
-              <div class="row">
-                <q-btn
-                  v-if="(solicitud.estatus === 'EnProceso' || solicitud.estatus === 'En proceso' || solicitud.estatus === 'En Proceso') && paso.estatusActividad !== 'Completado'"
-                  color="primary"
-                  outline
-                  no-caps
-                  rounded
-                  size="sm"
-                  icon="edit"
-                  label="Registrar Avance"
-                  class="shadow-1"
-                  @click="abrirDialogoAvance(paso)"
-                />
-              </div>
-            </div>
-          </q-timeline-entry>
+                      <div class="q-ml-sm q-pb-sm">
+                        <ul class="text-grey-9 q-pl-md q-mt-none q-mb-md" style="font-size: 0.95rem;">
+                          <li v-for="tarea in grupo.tareas" :key="tarea.idsolicitudActividad" class="q-mb-sm">
+  <div class="row items-center">
+    <span class="text-weight-medium">{{ tarea.descripcionDetalle }}</span>
+
+    <q-badge outline color="blue-grey-4" class="q-ml-sm text-caption" size="sm">
+      <q-icon name="person" size="10px" class="q-mr-xs" />
+      {{ tarea.nombreResponsable || 'Sin asignar' }}
+    </q-badge>
+
+    <q-badge v-if="tarea.estatusActividad === 'Completado'" color="positive" class="q-ml-xs" label="✓" />
+  </div>
+
+  <div v-if="tarea.datoGenerado" class="text-blue-8 q-ml-md text-caption text-italic">
+    Dato: {{ tarea.datoGenerado }}
+  </div>
+</li>
+                        </ul> 
+
+                        <q-btn
+                          v-if="['EnProceso', 'En proceso', 'En Proceso'].includes(solicitud.estatus) && !grupo.tareas.every(t => t.estatusActividad === 'Completado')"
+                          color="primary"
+                          outline
+                          rounded
+                          size="sm"
+                          no-caps
+                          icon="checklist"
+                          label="Registrar Avance del Grupo"
+                          class="shadow-1"
+                          @click="abrirDialogoAvanceGrupo(grupo)"
+                        />
+                      </div>
+                    </q-timeline-entry>
                   </q-timeline>
 
                 </q-card-section>
               </q-card>
             </div>
         </div>
-
-        <DialogRegistrarAvance
-          v-model="mostrarDialogo"
-          :pasosActuales="pasos"
-          @guardar="actualizarAvances"
-        />
       </div>
     </div>
     <DialogRegistrarAvance 
-      v-model="showDialogAvance" 
-      :actividad="pasoSeleccionado" 
-      @guardado="alGuardarAvance" 
-    />
+  v-model="showDialogAvance" 
+  :pasosActuales="pasoSeleccionado?.tareas || []" 
+  @guardar="alGuardarAvance" 
+/>
   </q-page>
 </template>
 
@@ -200,33 +206,17 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
-//import { useAuth } from 'src/composables/useAuth'
 import DialogRegistrarAvance from 'components/rh/DialogRegistrarAvance.vue'
-import { solicitudesService } from 'src/services/solicitudesService'
+import solicitudesService from 'src/services/solicitudesService.js'
 
-const showDialogAvance = ref(false)
-const pasoSeleccionado = ref(null)
 const route = useRoute()
 const $q = useQuasar()
-//const {esResponsable } = useAuth()
-
-const abrirDialogoAvance = (paso) => {
-  pasoSeleccionado.value = paso
-  showDialogAvance.value = true
-}
-
-// Esta función la llamará el diálogo cuando termine de guardar, para refrescar la línea de tiempo
-const alGuardarAvance = async () => {
-  // Recargamos el seguimiento completo para ver el nuevo estatus de las tareas
-  const res = await solicitudesService.obtenerSeguimiento(solicitud.value.idSolicitud)
-  solicitud.value = res
-  pasos.value = res.pasos || []
-}
 
 const cargando = ref(true)
-const mostrarDialogo = ref(false)
 const solicitud = ref({})
 const pasos = ref([])
+const showDialogAvance = ref(false)
+const pasoSeleccionado = ref(null)
 const observacionesTI = ref('')
 const observacionesGerente = ref('')
 
@@ -234,32 +224,62 @@ const colorEstatus = computed(() => {
   const s = solicitud.value.estatus
   if (s?.includes('TI')) return 'orange'
   if (s?.includes('Gerencial')) return 'blue'
-  if (s === 'En proceso') return 'positive'
+  if (s === 'EnProceso') return 'positive'
   return 'grey'
 })
 
-onMounted(async () => {
-  try {
-    cargando.value = true
-    // Verificamos qué ID estamos mandando
-    console.log("Buscando folio:", route.params.id) 
-    
-    const data = await solicitudesService.obtenerSeguimiento(route.params.id)
-    
-    if (data) {
-      solicitud.value = data
-      pasos.value = data.pasos || []
+const pasosAgrupados = computed(() => {
+  const mapaGrupos = new Map();
+
+  pasos.value.forEach((paso) => {
+    if (!mapaGrupos.has(paso.idGrupo)) {
+      mapaGrupos.set(paso.idGrupo, {
+        idGrupo: paso.idGrupo,
+        descripcionGrupo: paso.descripcionGrupo,
+        tareas: []
+      });
     }
-  } catch (err) {
-    console.error('Error al cargar seguimiento:', err.response?.status, err.message)
-    $q.notify({
-      color: 'negative',
-      message: `Error ${err.response?.status}: No se encontró la solicitud.`
+    mapaGrupos.get(paso.idGrupo).tareas.push(paso);
+  });
+
+  return Array.from(mapaGrupos.values());
+});
+
+// 3. FUNCIONES DEL TIMELINE Y DIÁLOGO
+const abrirDialogoAvanceGrupo = (grupo) => {
+  pasoSeleccionado.value = grupo;
+  showDialogAvance.value = true;
+}
+
+// Función maestra: Recibe las tareas editadas del diálogo, las manda al backend y recarga.
+const alGuardarAvance = async (actividadesActualizadas) => {
+  try {
+    $q.loading.show({ message: 'Guardando avances...' })
+
+    // 1. Mandamos las actividades específicas al backend
+    await solicitudesService.actualizarAvancesActividades({
+      idSolicitud: solicitud.value.idSolicitud,
+      actividades: actividadesActualizadas
     })
+
+    $q.notify({ color: 'positive', message: 'Avances guardados con éxito', icon: 'check' })
+
+    // 2. Recargamos los datos para que el Timeline se actualice visualmente
+    const res = await solicitudesService.obtenerSeguimiento(solicitud.value.idSolicitud)
+    if (res) {
+      solicitud.value = res
+      pasos.value = res.pasos || []
+    }
+    
+  } catch (err) {
+    console.error('Error al actualizar avances:', err)
+    $q.notify({ color: 'negative', message: 'No se pudieron guardar los avances' })
   } finally {
-    cargando.value = false
+    $q.loading.hide()
   }
-})
+}
+
+// 4. FUNCIONES DE APROBACIÓN (TI / GERENCIA)
 async function validarSolicitud(tipo) {
   try {
     $q.loading.show({ message: 'Actualizando estatus...' })
@@ -285,17 +305,26 @@ async function validarSolicitud(tipo) {
   }
 }
 
-async function actualizarAvances(nuevosPasos) {
+// 5. CARGA INICIAL
+onMounted(async () => {
   try {
-    await solicitudesService.actualizarEstatus(solicitud.value.idSolicitud, {
-      pasos: nuevosPasos
-    })
-    pasos.value = nuevosPasos
-    mostrarDialogo.value = false
-    $q.notify({ color: 'positive', message: 'Avances guardados' })
+    cargando.value = true
+    console.log("Buscando folio:", route.params.id) 
+    
+    const data = await solicitudesService.obtenerSeguimiento(route.params.id)
+    
+    if (data) {
+      solicitud.value = data
+      pasos.value = data.pasos || []
+    }
   } catch (err) {
-    console.error('Error al actualizar avances:', err)
-    $q.notify({ color: 'negative', message: 'No se pudieron guardar los avances' })
+    console.error('Error al cargar seguimiento:', err.response?.status, err.message)
+    $q.notify({
+      color: 'negative',
+      message: `Error ${err.response?.status}: No se encontró la solicitud.`
+    })
+  } finally {
+    cargando.value = false
   }
-}
+})
 </script>
